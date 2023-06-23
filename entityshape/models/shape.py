@@ -1,9 +1,11 @@
 """
+Copyright 2021 Mark Tully
 Converts entityschema to json suitable for comparing with a wikidata item
 """
 import os
 import re
-from typing import Optional, Match, Union, Pattern, Any
+from typing import Any, Match, Optional, Pattern, Union
+
 import requests
 
 
@@ -17,6 +19,7 @@ class Shape:
     :return name: the name of the entityschema
     :return shape: a json representation of the entityschema
     """
+
     def __init__(self, schema: str, language: str):
         # self.name: str = ""
         self.schema_shape: dict = {}
@@ -60,8 +63,10 @@ class Shape:
         for key in schema_json:
             if "shape" in schema_json[key]:
                 schema_json[key] = self._translate_sub_shape(schema_json[key])
-            if "required" in schema_json[key] and \
-                    "required" in schema_json[key]["required"]:
+            if (
+                "required" in schema_json[key]
+                and "required" in schema_json[key]["required"]
+            ):
                 schema_json[key]["required"] = schema_json[key]["required"]["required"]
         self.schema_shape = schema_json
 
@@ -160,7 +165,7 @@ class Shape:
         schema_text: str = ""
         # remove comments from the schema
         for line in self._json_text["schemaText"].splitlines():
-            head, _, _ = line.partition('# ')
+            head, _, _ = line.partition("# ")
             if line.startswith("#"):
                 head = ""
             schema_text += f"\n{head.strip()}"
@@ -173,7 +178,8 @@ class Shape:
         schema_text = schema_text.replace("xsd:string", ".")
         schema_text = schema_text.replace("xsd:decimal", ".")
         schema_text = schema_text.replace(
-            "[ <http://commons.wikimedia.org/wiki/Special:FilePath>~ ]", ".")
+            "[ <http://commons.wikimedia.org/wiki/Special:FilePath>~ ]", "."
+        )
         schema_text = schema_text.replace("[ <http://www.wikidata.org/entity>~ ]", ".")
         schema_text = os.linesep.join([s for s in schema_text.splitlines() if s])
         self._schema_text = schema_text
@@ -182,8 +188,9 @@ class Shape:
         """
         Gets the default shape to start at in the schema
         """
-        default_shape_name: Optional[Match[str]] = re.search(r"start.*=.*@<.*>",
-                                                             self._schema_text, re.IGNORECASE)
+        default_shape_name: Optional[Match[str]] = re.search(
+            r"start.*=.*@<.*>", self._schema_text, re.IGNORECASE
+        )
         if default_shape_name is not None:
             default_name: str = default_shape_name.group(0).replace(" ", "")
             self._default_shape_name = default_name[8:-1]
@@ -198,8 +205,9 @@ class Shape:
         :param shape_name: The name of the shape to be extracted
         :return: The extracted shape
         """
-        search: Union[Pattern[Union[str, Any]], Pattern] = re.compile(r"<%s>.*\n?([{\[])"
-                                                                      % shape_name)
+        search: Union[Pattern[Union[str, Any]], Pattern] = re.compile(
+            r"<%s>.*\n?([{\[])" % shape_name
+        )
         parentheses = self._find_parentheses(self._schema_text)
         try:
             shape_index: int = re.search(search, self._schema_text).start()
@@ -221,14 +229,14 @@ class Shape:
         index_list = {}
         pop_stack = []
         for index, character in enumerate(shape):
-            if character in ['{', '[']:
+            if character in ["{", "["]:
                 pop_stack.append(index)
-            elif character in ['}', ']']:
+            elif character in ["}", "]"]:
                 if len(pop_stack) == 0:
-                    raise IndexError('Too many } for {')
+                    raise IndexError("Too many } for {")
                 index_list[pop_stack.pop()] = index
         if len(pop_stack) > 0:
-            raise IndexError('No matching } for {')
+            raise IndexError("No matching } for {")
         return index_list
 
     def _translate_sub_shape(self, schema_json: dict):
@@ -248,12 +256,13 @@ class Shape:
         reference_child: dict = {}
         for key in sub_shape:
             if "status" in sub_shape[key]:
-                qualifier_child, reference_child, schema_json = \
-                    self._assess_sub_shape_key(sub_shape,
-                                               key,
-                                               schema_json,
-                                               qualifier_child,
-                                               reference_child)
+                (
+                    qualifier_child,
+                    reference_child,
+                    schema_json,
+                ) = self._assess_sub_shape_key(
+                    sub_shape, key, schema_json, qualifier_child, reference_child
+                )
         schema_json["qualifiers"] = qualifier_child
         schema_json["references"] = reference_child
         return schema_json
@@ -316,12 +325,18 @@ class Shape:
         child["cardinality"] = cardinality
         if "min" in cardinality and cardinality["min"] > 0:
             necessity = "required"
-        if "max" in cardinality and "min" in cardinality \
-                and cardinality["max"] == 0 and cardinality["min"] == 0:
+        if (
+            "max" in cardinality
+            and "min" in cardinality
+            and cardinality["max"] == 0
+            and cardinality["min"] == 0
+        ):
             necessity = "absent"
         return necessity, child
 
-    def _assess_sub_shape_key(self, sub_shape, key, schema_json, qualifier_child, reference_child):
+    def _assess_sub_shape_key(
+        self, sub_shape, key, schema_json, qualifier_child, reference_child
+    ):
         if "shape" in key:
             sub_shape_json = self._translate_sub_shape(key)
             if key["status"] == "statement":

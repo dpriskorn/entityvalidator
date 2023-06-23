@@ -1,9 +1,13 @@
 """
+Copyright 2021 Mark Tully
 Compares a json shape from shape.py with wikidata json
 """
 import requests
-
 from requests import Response
+
+
+class WikidataError(BaseException):
+    pass
 
 
 class CompareShape:
@@ -18,6 +22,7 @@ class CompareShape:
     :returns properties: a json representation of the conformity of each property in the entity
     :returns statements: a json representation of the conformity of each statement in the entity
     """
+
     def __init__(self, shape: dict, entity: str, language: str):
         self._entity: str = entity
         self._shape: dict = shape
@@ -25,7 +30,7 @@ class CompareShape:
 
         self._get_entity_json()
         if self._entities["entities"][self._entity]:
-            self._get_props(self._entities["entities"][self._entity]['claims'])
+            self._get_props(self._entities["entities"][self._entity]["claims"])
         self._get_property_names(language)
         self._compare_statements()
         self._compare_properties()
@@ -65,7 +70,7 @@ class CompareShape:
         Compares the statements in the entity to the schema
         """
         statements: dict = {}
-        claims: dict = self._entities["entities"][self._entity]['claims']
+        claims: dict = self._entities["entities"][self._entity]["claims"]
         for claim in claims:
             statement_results: list = []
             property_statement_results: list = []
@@ -73,9 +78,12 @@ class CompareShape:
                 child: dict = {"property": claim}
                 allowed: str = "not in schema"
                 if claim in self._shape:
-                    allowed, extra, qualifiers, required = \
-                        self._process_claim_in_shape(claim, statement, child)
-                    allowed = self._process_allowed(allowed, required, qualifiers, extra)
+                    allowed, extra, qualifiers, required = self._process_claim_in_shape(
+                        claim, statement, child
+                    )
+                    allowed = self._process_allowed(
+                        allowed, required, qualifiers, extra
+                    )
                 if allowed != "":
                     child["response"] = allowed
                 statements[statement["id"]] = child
@@ -96,7 +104,7 @@ class CompareShape:
             child: dict = {"name": self._names[claim], "necessity": "absent"}
             if claim in self._shape and "necessity" in self._shape[claim]:
                 child["necessity"] = self._shape[claim]["necessity"]
-            if claim in self._entities["entities"][self._entity]['claims']:
+            if claim in self._entities["entities"][self._entity]["claims"]:
                 response = self._process_claim(claim, child)
             if response != "":
                 child["response"] = response
@@ -114,10 +122,7 @@ class CompareShape:
             allowed = "present"
         if claim in self._shape:
             cardinality = self._assess_cardinality(claim, child)
-        if cardinality == "correct":
-            response = allowed
-        else:
-            response = cardinality
+        response = allowed if cardinality == "correct" else cardinality
         if response == "allowed":
             response = "correct"
         return response
@@ -135,9 +140,15 @@ class CompareShape:
             max_cardinality = True
             if "extra" in self._shape[claim]:
                 number_of_statements = self._property_responses[claim].count("correct")
-            if "min" in claim_cardinality and number_of_statements < claim_cardinality["min"]:
+            if (
+                "min" in claim_cardinality
+                and number_of_statements < claim_cardinality["min"]
+            ):
                 min_cardinality = False
-            if "max" in claim_cardinality and number_of_statements > claim_cardinality["max"]:
+            if (
+                "max" in claim_cardinality
+                and number_of_statements > claim_cardinality["max"]
+            ):
                 max_cardinality = False
         if min_cardinality and not max_cardinality:
             cardinality = "too many statements"
@@ -149,9 +160,14 @@ class CompareShape:
         """
         Downloads the entity from wikidata
         """
-        url: str = f"https://www.wikidata.org/wiki/Special:EntityData/{self._entity}.json"
+        url: str = (
+            f"https://www.wikidata.org/wiki/Special:EntityData/{self._entity}.json"
+        )
         response: Response = requests.get(url)
-        self._entities = response.json()
+        if response.status_code == 200:
+            self._entities = response.json()
+        else:
+            raise WikidataError(f"Got {response.status_code} from {url}")
 
     def _get_props(self, claims: dict):
         """
@@ -171,18 +187,26 @@ class CompareShape:
         Gets the names of properties from wikidata
         """
         self._names: dict = {}
-        wikidata_property_list: list = [self._props[i * 49:(i + 1) * 49]
-                                        for i in range((len(self._props) + 48) // 48)]
+        wikidata_property_list: list = [
+            self._props[i * 49 : (i + 1) * 49]
+            for i in range((len(self._props) + 48) // 48)
+        ]
         for element in wikidata_property_list:
             required_properties: str = "|".join(element)
-            url: str = f"https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" \
-                       f"{required_properties}&props=labels&languages={language}&format=json"
+            url: str = (
+                f"https://www.wikidata.org/w/api.php?action=wbgetentities&ids="
+                f"{required_properties}&props=labels&languages={language}&format=json"
+            )
             response: Response = requests.get(url)
-            json_text: dict = response.json()
+            if response.status_code == 200:
+                json_text: dict = response.json()
+            else:
+                raise WikidataError(f"Got {response.status_code} from {url}")
             for item in element:
                 try:
-                    self._names[json_text["entities"][item]["id"]] = \
-                        json_text["entities"][item]["labels"][language]["value"]
+                    self._names[json_text["entities"][item]["id"]] = json_text[
+                        "entities"
+                    ][item]["labels"][language]["value"]
                 except KeyError:
                     self._names[json_text["entities"][item]["id"]] = ""
 
@@ -206,16 +230,22 @@ class CompareShape:
             required_value: str = shape_claim["required"][required_property][0]
 
         query_entity: str = datavalue["value"]["id"]
-        url: str = f"https://www.wikidata.org/w/api.php?action=wbgetclaims" \
-                   f"&entity={query_entity}&property={required_property}&format=json"
+        url: str = (
+            f"https://www.wikidata.org/w/api.php?action=wbgetclaims"
+            f"&entity={query_entity}&property={required_property}&format=json"
+        )
         response: Response = requests.get(url)
-        json_text: dict = response.json()
+        if response.status_code == 200:
+            json_text: dict = response.json()
+        else:
+            raise WikidataError(f"Got {response.status_code} from {url}")
         if required_property in json_text["claims"]:
             for key in json_text["claims"][required_property]:
-                if key["mainsnak"]["datavalue"]["value"]["id"] == required_value:
-                    required = "present"
-                else:
-                    required = "incorrect"
+                required = (
+                    "present"
+                    if key["mainsnak"]["datavalue"]["value"]["id"] == required_value
+                    else "incorrect"
+                )
         else:
             required = "missing"
         return required
@@ -223,10 +253,7 @@ class CompareShape:
     @staticmethod
     def _process_allowed(allowed, required, qualifiers, extra):
         if required == "present":
-            if qualifiers == "":
-                allowed = "correct"
-            else:
-                allowed = qualifiers
+            allowed = "correct" if qualifiers == "" else qualifiers
         if required == "incorrect":
             if extra == "extra":
                 allowed = "allowed"
@@ -245,8 +272,7 @@ class CompareShape:
     def _process_qualifiers_in_shape_claim(shape_claim, statement):
         allowed_qualifiers: list = []
         for qualifier in shape_claim["qualifiers"]:
-            if "qualifiers" in statement and \
-                    qualifier not in statement["qualifiers"]:
+            if "qualifiers" in statement and qualifier not in statement["qualifiers"]:
                 allowed_qualifiers.append(qualifier)
         if len(allowed_qualifiers) > 0:
             qualifiers: str = "missing qualifiers: " + ", ".join(allowed_qualifiers)

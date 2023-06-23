@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from entityshape.exceptions import ApiError, EidError, LangError, QidError
+from entityshape.exceptions import EidError, LangError, QidError
 from entityshape.models.compareshape import CompareShape
 from entityshape.models.result import Result
 from entityshape.models.shape import Shape
@@ -29,11 +29,12 @@ class EntityShape(BaseModel):
         """This method checks if we got the 3 parameters we need and
         gets the results and return them"""
         self.__check__()
-        shape: Shape = Shape(self.eid, self.lang)
+        shape = Shape(eid=self.eid, lang=self.lang)
         comparison: CompareShape = CompareShape(
-            shape.get_schema_shape(), self.qid, self.lang
+            shape=shape.get_json_shape(), qid=self.qid, lang=self.lang
         )
-        result: dict = {
+        comparison.compare()
+        result = {
             "general": comparison.get_general(),
             "properties": comparison.get_properties(),
             "statements": comparison.get_statements(),

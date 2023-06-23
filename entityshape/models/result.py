@@ -3,15 +3,16 @@ from typing import Any, Dict, Set
 from pydantic import BaseModel, Field
 
 from entityshape.enums import Necessity, PropertyResponse, StatementResponse
-from entityshape.models.property_value import PropertyValue
+from entityshape.models.property_result import PropertyResult
 from entityshape.models.statement_value import StatementValue
 
 
 class Result(BaseModel):
+    # Upstream
     general: Dict[Any, Any] = {}
-    name: str = ""
-    properties: Dict[str, PropertyValue] = {}
+    properties: Dict[str, PropertyResult] = {}
     statements: Dict[Any, StatementValue] = {}
+    # Ours
     missing_properties: Set[str] = set()
     required_properties: Set[str] = set()
     incorrect_statements: Set[str] = set()
@@ -77,7 +78,7 @@ class Result(BaseModel):
 
     def __find_properties_with_too_many_statements__(self):
         for property_ in self.properties:
-            value: PropertyValue = self.properties[property_]
+            value: PropertyResult = self.properties[property_]
             if value.response == PropertyResponse.TOO_MANY_STATEMENTS:
                 self.properties_with_too_many_statements.add(property_)
 
@@ -89,13 +90,13 @@ class Result(BaseModel):
 
     def __find_required_properties__(self):
         for property_ in self.properties:
-            value: PropertyValue = self.properties[property_]
+            value: PropertyResult = self.properties[property_]
             if value.necessity == Necessity.REQUIRED:
                 self.required_properties.add(property_)
 
     def __find_missing_properties__(self):
         for property_ in self.properties:
-            value: PropertyValue = self.properties[property_]
+            value: PropertyResult = self.properties[property_]
             if value.response == PropertyResponse.MISSING:
                 self.missing_properties.add(property_)
 
@@ -114,13 +115,13 @@ class Result(BaseModel):
 
     def __find_properties_with_not_enough_correct_statements__(self):
         for property_ in self.properties:
-            value: PropertyValue = self.properties[property_]
+            value: PropertyResult = self.properties[property_]
             if value.response == PropertyResponse.NOT_ENOUGH_CORRECT_STATEMENTS:
                 self.properties_without_enough_correct_statements.add(property_)
 
     def __find_properties_that_are_not_allowed__(self):
         for property_ in self.properties:
-            value: PropertyValue = self.properties[property_]
+            value: PropertyResult = self.properties[property_]
             if value.necessity == Necessity.ABSENT:
                 self.properties_that_are_not_allowed.add(property_)
 

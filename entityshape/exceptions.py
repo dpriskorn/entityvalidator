@@ -10,5 +10,5 @@ class EidError(BaseException):
     pass
 
 
-class ApiError(BaseException):
+class WikidataError(BaseException):
     pass

@@ -1,65 +1,78 @@
 """
 Copyright 2021 Mark Tully
 Converts entityschema to json suitable for comparing with a wikidata item
+
+2023: Dennis rewrote it to use Pydantic and added tests
 """
 import os
 import re
 from typing import Any, Match, Optional, Pattern, Union
 
 import requests
+from pydantic import BaseModel
 
 
-class Shape:
+class Shape(BaseModel):
     """
     Produces a shape in the form of a json for a wikidata entityschema (e.g. E10)
 
-    :param schema: The identifier of the entityschema to be processed
-    :param language: The language to get the schema name in
+    :param eid: The identifier of the entityschema to be processed
+    :param lang: The language to get the schema name in
 
     :return name: the name of the entityschema
     :return shape: a json representation of the entityschema
     """
 
-    def __init__(self, schema: str, language: str):
-        # self.name: str = ""
-        self.schema_shape: dict = {}
+    eid: str
+    lang: str
+    property_line_regex = re.compile(r".+:P\d")
+    property_select_regex = re.compile(r"P\d+")
+    subshape_name_regex = re.compile(r"<.*>")
+    cardinality_regex_one = re.compile(r"{.+}")
+    cardinality_regex_two = re.compile(r"{((\d+)|(\d+,\d+))}")
+    shape_names_regex = re.compile(r"\n<.*>")
+    property_id_regex = re.compile(r"P\d+")
+    schema_shape: dict = {}
+    shapes: dict = {}
+    schema_shapes: dict = {}
+    default_shape_name: str = ""
+    json_text: dict = {}
+    raw_schema_text: str = ""
+    schema_text_without_comments: str = ""
+    schema_text: str = ""
 
-        self._shapes: dict = {}
-        self._schema_shapes: dict = {}
-        self._language: str = language
-        self._default_shape_name: str = ""
-
-        self._get_schema_json(schema)
-        self._strip_schema_comments()
-        if self._schema_text != "":
-            self._get_default_shape()
-            self._translate_schema()
-
-    def get_schema_shape(self):
+    def get_json_shape(self):
         """
         Gets the json representation of the schema
         :return: the json representation of the schema
         """
+        self._get_schema_json(self.eid)
+        self._get_schema_text()
+        self._remove_comments()
+        self._strip_schema_text()
+        if self.schema_text != "":
+            self._get_default_shape()
+            self._translate_schema()
         return self.schema_shape
 
-    def get_name(self):
-        """
-        Gets the name of the schema
-        :return: the name of the schema
-        """
-        if self._language in self._json_text["labels"]:
-            return self._json_text["labels"][self._language]
-        return ""
+    # def get_name(self):
+    #     """
+    #     Gets the name of the schema
+    #     :return: the name of the schema
+    #     """
+    #     if self._language in self._json_text["labels"]:
+    #         return self._json_text["labels"][self._language]
+    #     return ""
 
     def _translate_schema(self):
         """
         Converts the entityschema to a json representation
         """
-        for shape in self._shapes:
+        for shape in self.shapes:
             self._convert_shape(shape)
         schema_json: dict = {}
-        if self._default_shape_name != "":
-            schema_json = self._schema_shapes[self._default_shape_name]
+        if self.default_shape_name != "":
+            schema_json = self.schema_shapes[self.default_shape_name]
         for key in schema_json:
             if "shape" in schema_json[key]:
                 schema_json[key] = self._translate_sub_shape(schema_json[key])
@@ -76,7 +89,7 @@ class Shape:
 
         :param shape: the name of the shape to be converted
         """
-        new_shape: str = self._shapes[shape].replace("\n", "")
+        new_shape: str = self.shapes[shape].replace("\n", "")
         new_shape = new_shape.replace("\r", "")
         if "{" in new_shape:
             first_line = new_shape.split("{", 1)[0]
@@ -89,9 +102,11 @@ class Shape:
         except AttributeError:
             shape_json: dict = {}
         for line in shape_array:
-            if re.match(r".+:P\d", line):
+            if re.match(self.property_line_regex, line):
                 child: dict = {}
-                selected_property: str = re.search(r"P\d+", line).group(0)
+                selected_property: str = re.search(
+                    self.property_select_regex, line
+                ).group(0)
                 if shape_json.get(selected_property):
                     child = shape_json[selected_property]
                 shape_json[selected_property] = self._assess_property(line, child)
@@ -99,7 +114,7 @@ class Shape:
                 shape_json["lexicalCategory"] = self._assess_property(line, {})
             if "dct:language" in line:
                 shape_json["language"] = self._assess_property(line, {})
-        self._schema_shapes[shape] = shape_json
+        self.schema_shapes[shape] = shape_json
 
     def _assess_property(self, line: str, child: dict):
         """
@@ -111,7 +126,7 @@ class Shape:
         """
         snak: str = self._get_snak_type(line)
         if "@<" in line:
-            sub_shape_name: str = re.search(r"<.*>", line).group(0)
+            sub_shape_name: str = re.search(self.subshape_name_regex, line).group(0)
             child["shape"] = sub_shape_name[1:-1]
         if re.search(r"\[.*]", line):
             required_parameters_string: str = re.search(r"\[.*]", line).group(0)
@@ -128,8 +143,7 @@ class Shape:
         child["status"] = snak
         return child
 
-    @staticmethod
-    def _get_shape_properties(first_line: str):
+    def _get_shape_properties(self, first_line: str):
         """
         Get the overall properties of the shape
 
@@ -142,7 +156,7 @@ class Shape:
             shape_json = {"closed": "closed"}
         # a shape where values other than those specified are allowed for the specified properties
         if "EXTRA" in first_line:
-            properties = re.findall(r"P\d+", first_line)
+            properties = re.findall(self.property_id_regex, first_line)
             for wikidata_property in properties:
                 shape_json[wikidata_property] = {"extra": "allowed"}
         return shape_json
@@ -155,48 +169,55 @@ class Shape:
         """
         url: str = f"https://www.wikidata.org/wiki/EntitySchema:{schema}?action=raw"
         response = requests.get(url)
-        self._json_text: dict = response.json()
+        self.json_text = response.json()
 
-    def _strip_schema_comments(self):
-        """
-        Strips the comments out of the schema and converts parts we don't care about
-        because they're enforced by wikidata
-        """
-        schema_text: str = ""
+    def _get_schema_text(self):
+        self.raw_schema_text = self.json_text["schemaText"]
+
+    def _remove_comments(self):
         # remove comments from the schema
-        for line in self._json_text["schemaText"].splitlines():
+        for line in self.raw_schema_text.splitlines():
             head, _, _ = line.partition("# ")
             if line.startswith("#"):
                 head = ""
-            schema_text += f"\n{head.strip()}"
-        # replace data types with the any value designator(.).  Since wikidata won't allow items
-        # to enter the incorrect type (eg. trying to enter a LITERAL value where an IRI (i.e. a
-        # wikidata item) is required will fail to save
-        schema_text = schema_text.replace("IRI", ".")
-        schema_text = schema_text.replace("LITERAL", ".")
-        schema_text = schema_text.replace("xsd:dateTime", ".")
-        schema_text = schema_text.replace("xsd:string", ".")
-        schema_text = schema_text.replace("xsd:decimal", ".")
-        schema_text = schema_text.replace(
-            "[ <http://commons.wikimedia.org/wiki/Special:FilePath>~ ]", "."
-        )
-        schema_text = schema_text.replace("[ <http://www.wikidata.org/entity>~ ]", ".")
-        schema_text = os.linesep.join([s for s in schema_text.splitlines() if s])
-        self._schema_text = schema_text
+            self.schema_text_without_comments += f"\n{head.strip()}"
+
+    def _strip_schema_text(self):
+        """converts parts we don't care about
+        because they're enforced by wikidata"""
+        if self.schema_text_without_comments:
+            self.schema_text = self.schema_text_without_comments
+            # replace data types with the any value designator(.).  Since wikidata won't allow items
+            # to enter the incorrect type (eg. trying to enter a LITERAL value where an IRI (i.e. a
+            # wikidata item) is required will fail to save
+            self.schema_text = self.schema_text.replace("IRI", ".")
+            self.schema_text = self.schema_text.replace("LITERAL", ".")
+            self.schema_text = self.schema_text.replace("xsd:dateTime", ".")
+            self.schema_text = self.schema_text.replace("xsd:string", ".")
+            self.schema_text = self.schema_text.replace("xsd:decimal", ".")
+            self.schema_text = self.schema_text.replace(
+                "[ <http://commons.wikimedia.org/wiki/Special:FilePath>~ ]", "."
+            )
+            self.schema_text = self.schema_text.replace(
+                "[ <http://www.wikidata.org/entity>~ ]", "."
+            )
+            self.schema_text = os.linesep.join(
+                [s for s in self.schema_text.splitlines() if s]
+            )
 
     def _get_default_shape(self):
         """
         Gets the default shape to start at in the schema
         """
         default_shape_name: Optional[Match[str]] = re.search(
-            r"start.*=.*@<.*>", self._schema_text, re.IGNORECASE
+            r"start.*=.*@<.*>", self.schema_text, re.IGNORECASE
         )
         if default_shape_name is not None:
             default_name: str = default_shape_name.group(0).replace(" ", "")
-            self._default_shape_name = default_name[8:-1]
-            shape_names: list = re.findall(r"\n<.*>", self._schema_text)
+            self.default_shape_name = default_name[8:-1]
+            shape_names: list = re.findall(self.shape_names_regex, self.schema_text)
             for name in shape_names:
-                self._shapes[name[2:-1]] = self._get_specific_shape(name[2:-1])
+                self.shapes[name[2:-1]] = self._get_specific_shape(name[2:-1])
 
     def _get_specific_shape(self, shape_name: str):
         """
@@ -208,11 +229,11 @@ class Shape:
         search: Union[Pattern[Union[str, Any]], Pattern] = re.compile(
             r"<%s>.*\n?([{\[])" % shape_name
         )
-        parentheses = self._find_parentheses(self._schema_text)
+        parentheses = self._find_parentheses(self.schema_text)
         try:
-            shape_index: int = re.search(search, self._schema_text).start()
+            shape_index: int = re.search(search, self.schema_text).start()
         except AttributeError:
-            shape_index = re.search("<%s>" % shape_name, self._schema_text).start()
+            shape_index = re.search("<%s>" % shape_name, self.schema_text).start()
         closest = None
         for character in parentheses:
             if (character >= shape_index) and (closest is None or character < closest):
@@ -220,7 +241,7 @@ class Shape:
         if closest:
             shape_start: int = shape_index
             shape_end: int = parentheses[closest]
-            shape: str = self._schema_text[shape_start:shape_end]
+            shape: str = self.schema_text[shape_start:shape_end]
             return shape
         return ""
 
@@ -247,7 +268,7 @@ class Shape:
         :return: The extracted shape
         """
         try:
-            sub_shape: dict = self._schema_shapes[schema_json["shape"]]
+            sub_shape: dict = self.schema_shapes[schema_json["shape"]]
             del schema_json["shape"]
         except KeyError:
             del schema_json["shape"]
@@ -267,8 +288,7 @@ class Shape:
         schema_json["references"] = reference_child
         return schema_json
 
-    @staticmethod
-    def _get_cardinality(schema_line: str):
+    def _get_cardinality(self, schema_line: str):
         """
         Gets the cardinality of a line of the schema
 
@@ -286,8 +306,8 @@ class Shape:
         elif "{0}" in schema_line:
             cardinality["max"] = 0
             cardinality["min"] = 0
-        elif re.search(r"{.+}", schema_line):
-            match = re.search(r"{((\d+)|(\d+,\d+))}", schema_line)
+        elif re.search(self.cardinality_regex_one, schema_line):
+            match = re.search(self.cardinality_regex_two, schema_line)
             if hasattr(match, "group"):
                 match = match.group()
                 cardinalities = match[1:-1].split(",")

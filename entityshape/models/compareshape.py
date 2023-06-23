@@ -2,32 +2,50 @@
 Copyright 2021 Mark Tully
 Compares a json shape from shape.py with wikidata json
 """
+
 import requests
+from pydantic import BaseModel
 from requests import Response
 
+from entityshape.enums import Necessity, StatementResponse
+from entityshape.exceptions import WikidataError
+from entityshape.models.property_result import PropertyResult
+from entityshape.models.propertyanalyzer import PropertyAnalyzer
+from entityshape.models.shape_claim import ShapeClaim
 
-class CompareShape:
+
+class CompareShape(BaseModel):
     """
     Compares a wikidata entity (e.g. Q42) with a shape and returns the conformity of
     the statements and properties in the entity to the shape
 
     :param shape: The a json representation of the shape to be compared against
-    :param entity: The entity to be compared (e.g. Q42)
-    :param language: The language to use for details like property names
+    :param qid: The entity to be compared (e.g. Q42)
+    :param lang: The language to use for details like property names
 
     :returns properties: a json representation of the conformity of each property in the entity
     :returns statements: a json representation of the conformity of each statement in the entity
     """
 
-    def __init__(self, shape: dict, entity: str, language: str):
-        self._entity: str = entity
-        self._shape: dict = shape
-        self._property_responses: dict = {}
+    shape: dict
+    qid: str
+    lang: str
+    property_responses: dict = {}
+    properties: dict = {}
+    entities: dict = {}
+    raw_properties: list = []
+    property_names: dict = {}
+    claims: dict = {}
+    statements: dict = {}
+
+    def compare(self):
 
         self._get_entity_json()
-        if self._entities["entities"][self._entity]:
-            self._get_props(self._entities["entities"][self._entity]["claims"])
-        self._get_property_names(language)
+        if self.entities["entities"][self.qid]:
+            self._get_properties(self.entities["entities"][self.qid]["claims"])
+        self._get_property_names(self.lang)
+        # First we compare the statements
+        self._get_claims()
         self._compare_statements()
         self._compare_properties()
 
@@ -53,136 +71,160 @@ class CompareShape:
         general: dict = {}
         properties: list = ["lexicalCategory", "language"]
         for item in properties:
-            if item in self._shape and item in self._entities["entities"][self._entity]:
-                expected: list = self._shape[item]["allowed"]
-                actual: str = self._entities["entities"][self._entity][item]
+            if item in self.shape and item in self.entities["entities"][self.qid]:
+                expected: list = self.shape[item]["allowed"]
+                actual: str = self.entities["entities"][self.qid][item]
                 general[item] = "incorrect"
                 if actual in expected:
                     general[item] = "correct"
         return general
 
+    def _get_claims(self):
+        self.claims: dict = self.entities["entities"][self.qid]["claims"]
+        # console.print(claims)
+        # sys.exit()
+
     def _compare_statements(self):
         """
         Compares the statements in the entity to the schema
         """
-        statements: dict = {}
-        claims: dict = self._entities["entities"][self._entity]["claims"]
-        for claim in claims:
-            statement_results: list = []
-            property_statement_results: list = []
-            for statement in claims[claim]:
-                child: dict = {"property": claim}
-                allowed: str = "not in schema"
-                if claim in self._shape:
-                    allowed, extra, qualifiers, required = self._process_claim_in_shape(
-                        claim, statement, child
-                    )
-                    allowed = self._process_allowed(
-                        allowed, required, qualifiers, extra
-                    )
-                if allowed != "":
-                    child["response"] = allowed
-                statements[statement["id"]] = child
-                statement_results.append(allowed)
-                if allowed.startswith("missing"):
-                    allowed = "incorrect"
-                property_statement_results.append(allowed)
-            self._property_responses[claim] = property_statement_results
-        return statements
+        # TODO avoid passing variables around and use pydantic instead
+        # iterate through the raw claims from Wikidata
+        # the property_id is the key and the value is an array
+        # 'P31': [
+        #         {
+        #             'mainsnak': {
+        #                 'snaktype': 'value',
+        #                 'property': 'P31',
+        #                 'hash': 'e31711f94aca8f3398eff096eaf875da8ba16d20',
+        #                 'datavalue': {
+        #                     'value': {
+        #                         'entity-type': 'item',
+        #                         'numeric-id': 96650551,
+        #                         'id': 'Q96650551'
+        #                     },
+        #                     'type': 'wikibase-entityid'
+        #                 },
+        #                 'datatype': 'wikibase-item'
+        #             },
+        #             'type': 'statement',
+        #             'id': 'Q119853967$D8462BF0-2599-4F62-8147-E84465529B19',
+        #             'rank': 'normal'
+        #         }
+        #     ],
+        for property_id in self.claims:
+            self.analyze_property_statements(property_id=property_id)
+
+    def analyze_property_statements(self, property_id):
+        """We analyze the statements of the property"""
+        # result variables
+        statement_results: list = []
+        property_statement_results: list = []
+        # iterate through the statements on each claim
+        for statement in self.claims[property_id]:
+            #         {
+            #             'mainsnak': {
+            #                 'snaktype': 'value',
+            #                 'property': 'P31',
+            #                 'hash': 'e31711f94aca8f3398eff096eaf875da8ba16d20',
+            #                 'datavalue': {
+            #                     'value': {
+            #                         'entity-type': 'item',
+            #                         'numeric-id': 96650551,
+            #                         'id': 'Q96650551'
+            #                     },
+            #                     'type': 'wikibase-entityid'
+            #                 },
+            #                 'datatype': 'wikibase-item'
+            #             },
+            #             'type': 'statement',
+            #             'id': 'Q119853967$D8462BF0-2599-4F62-8147-E84465529B19',
+            #             'rank': 'normal'
+            #         }
+
+            property_result = PropertyResult(
+                property_id=property_id,
+            )
+            if property_id in self.shape:
+                # It is in the schema :)
+                shape_claim = ShapeClaim(
+                    property_id=property_id,
+                    statement=statement,
+                    property_value=property_result,
+                    shape=self.shape,
+                )
+                conditions = shape_claim.get_conditions_from_shape()
+                conditions = shape_claim.process_allowed(conditions)
+                # Carry over the results
+                property_result.property_status = conditions.property_status
+                property_result.required_ = conditions.required_value_status
+                property_result.statement_response = ??
+            self.statements[statement["id"]] = property_result
+            statement_results.append(statement_response)
+            # TODO rewrite to OOP and enums
+            # if statement_response.startswith("missing"):
+            #     statement_response = "incorrect"
+            property_statement_results.append(statement_response)
+        self.property_responses[property_id] = property_statement_results
 
     def _compare_properties(self):
         """
         Compares the properties in the entity to the schema
         """
-        properties: dict = {}
-        for claim in self._props:
-            response: str = "missing"
-            child: dict = {"name": self._names[claim], "necessity": "absent"}
-            if claim in self._shape and "necessity" in self._shape[claim]:
-                child["necessity"] = self._shape[claim]["necessity"]
-            if claim in self._entities["entities"][self._entity]["claims"]:
-                response = self._process_claim(claim, child)
-            if response != "":
-                child["response"] = response
-            properties[claim] = child
-        return properties
-
-    def _process_claim(self, claim, child):
-        cardinality: str = ""
-        allowed: str
-        if "incorrect" in self._property_responses[claim]:
-            allowed = "incorrect"
-        elif "correct" in self._property_responses[claim]:
-            allowed = "correct"
-        else:
-            allowed = "present"
-        if claim in self._shape:
-            cardinality = self._assess_cardinality(claim, child)
-        response = allowed if cardinality == "correct" else cardinality
-        if response == "allowed":
-            response = "correct"
-        return response
-
-    def _assess_cardinality(self, claim, child):
-        cardinality: str = ""
-        number_of_statements: int = len(self._property_responses[claim])
-        min_cardinality = False
-        max_cardinality = False
-        if child["necessity"] != "absent":
-            cardinality = "correct"
-        if "cardinality" in self._shape[claim]:
-            claim_cardinality = self._shape[claim]["cardinality"]
-            min_cardinality = True
-            max_cardinality = True
-            if "extra" in self._shape[claim]:
-                number_of_statements = self._property_responses[claim].count("correct")
-            if (
-                "min" in claim_cardinality
-                and number_of_statements < claim_cardinality["min"]
-            ):
-                min_cardinality = False
-            if (
-                "max" in claim_cardinality
-                and number_of_statements > claim_cardinality["max"]
-            ):
-                max_cardinality = False
-        if min_cardinality and not max_cardinality:
-            cardinality = "too many statements"
-        if max_cardinality and not min_cardinality:
-            cardinality = "not enough correct statements"
-        return cardinality
+        for property_id in self.raw_properties:
+            # Basic assumption that the response is missing and necessity=absent
+            property_value = PropertyResult(
+                name=self.property_names[property_id],
+            )
+            # Update the necessity
+            if property_id in self.shape and "necessity" in self.shape[property_id]:
+                property_value.necessity = Necessity(
+                    self.shape[property_id]["necessity"]
+                )
+            if property_id in self.entities["entities"][self.qid]["claims"]:
+                pa = PropertyAnalyzer(
+                    property_id=property_id,
+                    property_value=property_value,  # this is needed for the cardinality check
+                    property_responses=self.property_responses,
+                    shape=self.shape,
+                )
+                pa.analyze()
+                # Propagate results
+                property_value.property_status = pa.property_status
+                property_value.cardinality = pa.cardinality
+            self.properties[property_id] = property_value
+        return self.properties
 
     def _get_entity_json(self):
         """
         Downloads the entity from wikidata
         """
-        url: str = (
-            f"https://www.wikidata.org/wiki/Special:EntityData/{self._entity}.json"
-        )
+        url: str = f"https://www.wikidata.org/wiki/Special:EntityData/{self.qid}.json"
         response: Response = requests.get(url)
-        self._entities = response.json()
+        if response.status_code == 200:
+            self.entities = response.json()
+        else:
+            raise WikidataError(f"Got {response.status_code} from Wikidata for {url}")
 
-    def _get_props(self, claims: dict):
+    def _get_properties(self, claims: dict):
         """
         Gets a list of properties included in the entity
         :param claims: The claims in the entity
         """
-        self._props: list = []
         for claim in claims:
-            if claim not in self._props:
-                self._props.append(claim)
-        for claim in self._shape:
-            if claim not in self._props and claim.startswith("P"):
-                self._props.append(claim)
+            if claim not in self.raw_properties:
+                self.raw_properties.append(claim)
+        for claim in self.shape:
+            if claim not in self.raw_properties and claim.startswith("P"):
+                self.raw_properties.append(claim)
 
     def _get_property_names(self, language: str):
         """
         Gets the names of properties from wikidata
         """
-        self._names: dict = {}
         wikidata_property_list: list = [
-            self._props[i * 49 : (i + 1) * 49]
-            for i in range((len(self._props) + 48) // 48)
+            self.raw_properties[i * 49 : (i + 1) * 49]
+            for i in range((len(self.raw_properties) + 48) // 48)
         ]
         for element in wikidata_property_list:
             required_properties: str = "|".join(element)
@@ -191,103 +233,16 @@ class CompareShape:
                 f"{required_properties}&props=labels&languages={language}&format=json"
             )
             response: Response = requests.get(url)
-            json_text: dict = response.json()
+            if response.status_code == 200:
+                json_text: dict = response.json()
+            else:
+                raise WikidataError(
+                    f"Got {response.status_code} from Wikidata for {url}"
+                )
             for item in element:
                 try:
-                    self._names[json_text["entities"][item]["id"]] = json_text[
+                    self.property_names[json_text["entities"][item]["id"]] = json_text[
                         "entities"
                     ][item]["labels"][language]["value"]
                 except KeyError:
-                    self._names[json_text["entities"][item]["id"]] = ""
-
-    def _process_allowed_in_shape_claim(self, claim, param):
-        allowed = "correct"
-        if "id" in param["value"]:
-            value: str = param["value"]["id"]
-            if value not in self._shape[claim]["allowed"]:
-                allowed = "incorrect"
-        return allowed
-
-    @staticmethod
-    def _process_required_in_shape_claim(shape_claim, datavalue):
-        required: str = ""
-        if "required" in shape_claim["required"]:
-            shape_claim_required = shape_claim["required"]["required"]
-            required_property: str = list(shape_claim_required.keys())[0]
-            required_value: str = shape_claim_required[required_property][0]
-        else:
-            required_property: str = list(shape_claim["required"].keys())[0]
-            required_value: str = shape_claim["required"][required_property][0]
-
-        query_entity: str = datavalue["value"]["id"]
-        url: str = (
-            f"https://www.wikidata.org/w/api.php?action=wbgetclaims"
-            f"&entity={query_entity}&property={required_property}&format=json"
-        )
-        response: Response = requests.get(url)
-        json_text: dict = response.json()
-        if required_property in json_text["claims"]:
-            for key in json_text["claims"][required_property]:
-                required = (
-                    "present"
-                    if key["mainsnak"]["datavalue"]["value"]["id"] == required_value
-                    else "incorrect"
-                )
-        else:
-            required = "missing"
-        return required
-
-    @staticmethod
-    def _process_allowed(allowed, required, qualifiers, extra):
-        if required == "present":
-            allowed = "correct" if qualifiers == "" else qualifiers
-        if required == "incorrect":
-            if extra == "extra":
-                allowed = "allowed"
-            else:
-                if qualifiers == "":
-                    allowed = "allowed"
-                else:
-                    allowed = qualifiers
-        if allowed == "incorrect" and extra == "extra":
-            allowed = "allowed"
-        if required == "missing":
-            allowed = required
-        return allowed
-
-    @staticmethod
-    def _process_qualifiers_in_shape_claim(shape_claim, statement):
-        allowed_qualifiers: list = []
-        for qualifier in shape_claim["qualifiers"]:
-            if "qualifiers" in statement and qualifier not in statement["qualifiers"]:
-                allowed_qualifiers.append(qualifier)
-        if len(allowed_qualifiers) > 0:
-            qualifiers: str = "missing qualifiers: " + ", ".join(allowed_qualifiers)
-        else:
-            qualifiers = ""
-        return qualifiers
-
-    def _process_claim_in_shape(self, claim, statement, child):
-        datavalue: dict = statement["mainsnak"]["datavalue"]
-        shape_claim: dict = self._shape[claim]
-        qualifiers: str = ""
-        required: str = ""
-        extra: str = ""
-
-        allowed = "present"
-        if "necessity" in shape_claim:
-            child["necessity"] = shape_claim["necessity"]
-            allowed = "allowed"
-        if "allowed" in shape_claim:
-            allowed = self._process_allowed_in_shape_claim(claim, datavalue)
-        if "not_allowed" in shape_claim and "id" in datavalue["value"]:
-            value: str = datavalue["value"]["id"]
-            if value in shape_claim["not_allowed"]:
-                allowed = "not allowed"
-        if "extra" in shape_claim:
-            extra: str = "extra"
-        if "qualifiers" in shape_claim:
-            qualifiers = self._process_qualifiers_in_shape_claim(shape_claim, statement)
-        if "required" in shape_claim:
-            required = self._process_required_in_shape_claim(shape_claim, datavalue)
-        return allowed, extra, qualifiers, required
+                    self.property_names[json_text["entities"][item]["id"]] = ""

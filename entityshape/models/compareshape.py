@@ -6,6 +6,10 @@ import requests
 from requests import Response
 
 
+class WikidataError(BaseException):
+    pass
+
+
 class CompareShape:
     """
     Compares a wikidata entity (e.g. Q42) with a shape and returns the conformity of
@@ -160,7 +164,10 @@ class CompareShape:
             f"https://www.wikidata.org/wiki/Special:EntityData/{self._entity}.json"
         )
         response: Response = requests.get(url)
-        self._entities = response.json()
+        if response.status_code == 200:
+            self._entities = response.json()
+        else:
+            raise WikidataError(f"Got {response.status_code} from {url}")
 
     def _get_props(self, claims: dict):
         """
@@ -191,7 +198,10 @@ class CompareShape:
                 f"{required_properties}&props=labels&languages={language}&format=json"
             )
             response: Response = requests.get(url)
-            json_text: dict = response.json()
+            if response.status_code == 200:
+                json_text: dict = response.json()
+            else:
+                raise WikidataError(f"Got {response.status_code} from {url}")
             for item in element:
                 try:
                     self._names[json_text["entities"][item]["id"]] = json_text[
@@ -225,7 +235,10 @@ class CompareShape:
             f"&entity={query_entity}&property={required_property}&format=json"
         )
         response: Response = requests.get(url)
-        json_text: dict = response.json()
+        if response.status_code == 200:
+            json_text: dict = response.json()
+        else:
+            raise WikidataError(f"Got {response.status_code} from {url}")
         if required_property in json_text["claims"]:
             for key in json_text["claims"][required_property]:
                 required = (

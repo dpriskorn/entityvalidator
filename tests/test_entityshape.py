@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from entityshape import ApiError, EntityShape, Result, LangError, EidError, QidError
+from entityshape import ApiError, EidError, EntityShape, LangError, QidError, Result
 from entityshape.models.compareshape import WikidataError
 
 

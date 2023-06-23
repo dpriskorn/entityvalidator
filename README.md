@@ -64,5 +64,9 @@ Cases:
 * a property has not enough values
 * ?
 
+# ShEx Tip
+When working on your Entity Schemas the constraints here are nice to know/remember
+https://shex.io/shex-primer/#tripleConstraints
+
 # License
 GPLv3+

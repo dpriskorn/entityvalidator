@@ -35,8 +35,8 @@ It currently checks these five conditions that all have to be false for the item
 5.   statements with properties that are not allowed found
 
 # Background
-This library is the glue between libraries like Wikibase 
-Integrator and entityschemas. 
+This library is the glue between libraries like [Wikibase 
+Integrator](https://github.com/LeMyst/WikibaseIntegrator/) and entityschemas. 
 
 It makes it easy to batch check a whole subset of Wikidata 
 items against a schema. Nice!
@@ -68,5 +68,15 @@ Cases:
 When working on your Entity Schemas the constraints here are nice to know/remember
 https://shex.io/shex-primer/#tripleConstraints
 
+# Thanks
+Big thanks to [Myst](https://github.com/LeMyst) and 
+[Christian Clauss](https://github.com/cclauss) for 
+advice and help with Ruff to make this better. 
+
 # License
 GPLv3+
+
+# What I learned
+* Forking other peoples undocumented spaghetti code is not much fun.
+* Pydantic is wonderful yet again it makes working with OOP easy peasy :)
+* Ruff is crazy fast and very nice!

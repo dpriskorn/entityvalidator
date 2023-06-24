@@ -18,9 +18,9 @@ packages = [
 pydantic = "^1.10.9"
 python = ">=3.8,<=3.12"
 requests = "^2.28.1"
-# wikibaseintegrator = "^0.12.1"
 
 [tool.poetry.group.dev.dependencies]
+rich = "^13.4.2"
 black = "^22.8.0"
 codespell = "^2.2.1"
 coverage = "^6.5.0"

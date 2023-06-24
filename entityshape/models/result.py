@@ -1,10 +1,13 @@
+import logging
 from typing import Any, Dict, Set
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ValidationError
 
 from entityshape.enums import Necessity, PropertyResponse, StatementResponse
 from entityshape.models.property_value import PropertyValue
 from entityshape.models.statement_value import StatementValue
+
+logger = logging.getLogger(__name__)
 
 
 class Result(BaseModel):
@@ -15,6 +18,7 @@ class Result(BaseModel):
     missing_properties: Set[str] = set()
     required_properties: Set[str] = set()
     incorrect_statements: Set[str] = set()
+    missing_statements: Set[str] = set()
     properties_with_too_many_statements: Set[str] = set()
     analyzed: bool = False
     required_properties_that_are_missing: Set[str] = set()
@@ -84,8 +88,14 @@ class Result(BaseModel):
     def __find_incorrect_statements__(self):
         for statement in self.statements:
             value: StatementValue = self.statements[statement]
-            if value.response == StatementResponse.INCORRECT:
-                self.incorrect_statements.add(statement)
+            try:
+                StatementResponse(value.response)
+                if value.response == StatementResponse.INCORRECT:
+                    self.incorrect_statements.add(statement)
+            except ValueError:
+                # Ignore responses we cannot predict
+                logger.warning(f"Ignoring statement response: {value.response}")
+                pass
 
     def __find_required_properties__(self):
         for property_ in self.properties:

@@ -21,3 +21,4 @@ class StatementResponse(Enum):
     ALLOWED = "allowed"
     INCORRECT = "incorrect"
     CORRECT = "correct"
+    MISSING = "missing"

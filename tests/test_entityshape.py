@@ -54,7 +54,7 @@ class TestEntityShape(TestCase):
     #     assert e.result.required_properties_that_are_missing == {"P2043"}
     #     assert e.result.properties_that_are_not_allowed == {"P912", "P625", "P276"}
 
-    def test_get_result_weird_statement_response(self):
+    def test_get_result_missing_statement_response(self):
         e = EntityShape(eid="E395", lang="en", qid="Q4802448")
         e.get_result()
         # print(e.compare_shape_result)
@@ -63,3 +63,13 @@ class TestEntityShape(TestCase):
         assert isinstance(e.result, Result)
         assert e.result.is_valid is False
         assert e.result.properties_without_enough_correct_statements == {"P39"}
+
+    def test_get_result_weird_statement_response_party_person(self):
+        e = EntityShape(eid="E395", lang="en", qid="Q20727")
+        e.get_result()
+        # print(e.compare_shape_result)
+        # console = Console()
+        # console.print(e.result)
+        assert isinstance(e.result, Result)
+        assert e.result.is_valid is False
+        # assert e.result.properties_without_enough_correct_statements == {"P39"}

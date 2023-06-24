@@ -20,6 +20,7 @@ class EntityShape(BaseModel):
     result: Result = Result()
     eid_regex = re.compile(r"E\d+")
     qid_regex = re.compile(r"Q\d+")
+    compare_shape_result: dict = {}
 
     def __check__(self):
         if not self.lang:
@@ -41,12 +42,12 @@ class EntityShape(BaseModel):
         comparison: CompareShape = CompareShape(
             shape.get_schema_shape(), self.qid, self.lang
         )
-        result: dict = {
+        self.compare_shape_result: dict = {
             "general": comparison.get_general(),
             "properties": comparison.get_properties(),
             "statements": comparison.get_statements(),
         }
-        self.result = Result(**result)
+        self.result = Result(**self.compare_shape_result)
         self.result.analyze()
         # print(self.result)
         return self.result

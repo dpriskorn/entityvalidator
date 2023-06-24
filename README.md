@@ -22,6 +22,14 @@ Get it from pypi
 `$ pip install pyentityshape`
 
 # Usage
+
+## Jupyter Notebooks
+Example notebooks with code for validation of multiple items: 
+[hiking paths](https://public-paws.wmcloud.org/User:So9q/Validating%20a%20group%20of%20items-all-hiking-paths-in-sweden.ipynb) 
+[campsites](https://public-paws.wmcloud.org/User:So9q/Validating%20a%20group%20of%20items-all-campsites-in-sweden.ipynb) 
+[shelters](https://public-paws.wmcloud.org/User:So9q/Validating%20a%20group%20of%20items-all-shelters-in-sweden.ipynb)
+
+## CLI
 Example:
 ```
 e = EntityShape(eid="E1", lang="en", qid="Q1")

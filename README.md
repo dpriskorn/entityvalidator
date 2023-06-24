@@ -1,4 +1,4 @@
-# Entityshape
+# [Entityshape](https://www.wikidata.org/wiki/Q119899931)
 A python library to compare a wikidata item with an entityschema
 
 Based on https://github.com/Teester/entityshape by Mark Tully 
@@ -94,5 +94,6 @@ GPLv3+
 
 # What I learned
 * Forking other peoples undocumented spaghetti code is not much fun.
+* I want to find a more reliable validator that support somevalue and novalue
 * Pydantic is wonderful yet again it makes working with OOP easy peasy :)
 * Ruff is crazy fast and very nice!

@@ -8,6 +8,14 @@ and https://github.com/dpriskorn/PyEntityshape by Dennis Priskorn
 * compare a given wikidata item with an entityschema and dig into missing properties, too many statement, etc.
 * determine whether an item is valid according to a certain schema or not
 
+# Limitations
+The shape and compareshape classes currently only support:
+* cardinality (too many or not enough values)
+* whether the property is allowed or not
+* whether the value of a statement on a given property is correct/incorrect
+
+It is still a bit unclear if and how the qualifier validation works.
+
 # Installation
 Get it from pypi
 

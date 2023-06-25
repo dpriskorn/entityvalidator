@@ -1152,3 +1152,28 @@ class TestResult(TestCase):
             )
             == 1
         )
+
+    def test__repr__hiking_path_with_1_missing_required_property_result(self):
+        assert (
+            repr(self.hiking_path_with_1_missing_required_property_result)
+            == "Valid: False\nrequired_properties_that_are_missing: {'P2043'}"
+        )
+
+    def test__repr__campsite_not_allowed_p625_result(self):
+        assert repr(self.campsite_not_allowed_p625_result) == (
+            "Valid: False\n"
+            "properties_with_too_many_statements: {'P625'}\n"
+            "required_properties_that_are_missing: {'P2043'}"
+        )
+
+    def test__repr__party_member_missing_p37_result(self):
+        assert (
+            repr(self.party_member_missing_p37_result)
+            == "Valid: False\nproperties_without_enough_correct_statements: {'P39'}"
+        )
+
+    def test__repr__campsite_missing_correct_p31_result(self):
+        assert (
+            repr(self.campsite_missing_correct_p31_result)
+            == "Valid: False\nproperties_without_enough_correct_statements: {'P31'}"
+        )

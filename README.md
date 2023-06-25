@@ -34,10 +34,12 @@ Example:
 ```
 e = EntityShape(eid="E1", lang="en", qid="Q1")
 result = e.get_result()
-result.is_valid
-False|True
-result.required_properties_that_are_missing
-{"P1", "P2"}
+# Get human readable result
+print(result)
+"Valid: False\nproperties_without_enough_correct_statements: {'P31'}"
+# Access the data
+print(result.properties_without_enough_correct_statements)
+"{'P31'}"
 ```
 
 ## Validation

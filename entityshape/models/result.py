@@ -139,3 +139,23 @@ class Result(BaseModel):
             value: StatementValue = self.statements[statement]
             if value.necessity == Necessity.ABSENT:
                 self.statements_with_property_that_is_not_allowed.add(value.property)
+
+    def __str__(self):
+        self.__repr__()
+
+    def __repr__(self):
+        """Return the result of the validation as a formatted string
+        with output exactly describing what caused the validation to fail"""
+        string = f"Valid: {self.is_valid}"
+        if self.is_valid:
+            return string
+        else:
+            if self.properties_with_too_many_statements_found:
+                string += f"\nproperties_with_too_many_statements: {self.properties_with_too_many_statements}"
+            if self.properties_without_enough_correct_statements_found:
+                string += f"\nproperties_without_enough_correct_statements: {self.properties_without_enough_correct_statements}"
+            if self.required_properties_that_are_missing:
+                string += f"\nrequired_properties_that_are_missing: {self.required_properties_that_are_missing}"
+            if self.incorrect_statements:
+                string += f"\nincorrect_statements: {self.incorrect_statements}"
+            return string

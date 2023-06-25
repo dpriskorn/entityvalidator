@@ -50,6 +50,13 @@ It currently checks these five conditions that all have to be false for the item
 4.   properties without enough correct statements found
 5.   statements with properties that are not allowed found
 
+## Known working schemas
+This library currently only supports a subset of all features in the ShEx specifikation.
+
+The following Entity Schemas are known to work:
+* [hiking path](https://www.wikidata.org/w/index.php?title=EntitySchema:E375&oldid=1833851062)
+* [shelter](https://www.wikidata.org/w/index.php?title=EntitySchema:E398&oldid=1923235264)
+
 # Background
 This library is the glue between libraries like [Wikibase 
 Integrator](https://github.com/LeMyst/WikibaseIntegrator/) and entityschemas. 

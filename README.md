@@ -33,7 +33,7 @@ Example notebooks with code for validation of multiple items:
 Example:
 ```
 e = EntityShape(eid="E1", lang="en", qid="Q1")
-result = e.get_result()
+result = e.validate_and_get_result()
 # Get human readable result
 print(result)
 "Valid: False\nproperties_without_enough_correct_statements: {'P31'}"

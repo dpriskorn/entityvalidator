@@ -141,7 +141,7 @@ class Result(BaseModel):
                 self.statements_with_property_that_is_not_allowed.add(value.property)
 
     def __str__(self):
-        self.__repr__()
+        return self.__repr__()
 
     def __repr__(self):
         """Return the result of the validation as a formatted string

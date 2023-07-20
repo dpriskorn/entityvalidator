@@ -1177,3 +1177,10 @@ class TestResult(TestCase):
             repr(self.campsite_missing_correct_p31_result)
             == "Valid: False\nProperties without enough correct statements: instance of (P31)"
         )
+
+    def test_danish_labels_in_result_output(self):
+        self.party_member_missing_p37_result.lang = "da"
+        assert repr(self.party_member_missing_p37_result) == (
+            "Valid: False\nProperties without enough "
+            "fffcorrect statements: embede (P39)"
+        )

@@ -1,4 +1,5 @@
 import re
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel
 
@@ -14,13 +15,13 @@ class EntityShape(BaseModel):
 
     The API currently only support items"""
 
-    qid = ""  # item
-    eid = ""  # entityshape
-    lang = ""  # language
+    entity_id: str = ""  # item or lexeme
+    eid: str = ""  # entityshape
+    lang: str = "en"  # language defaults to English
     result: Result = Result()
     eid_regex = re.compile(r"E\d+")
-    qid_regex = re.compile(r"Q\d+")
-    compare_shape_result: dict = {}
+    entity_id_regex = re.compile(r"[QL]\d+")
+    compare_shape_result: Optional[Dict[str, Any]] = None
 
     def __check_inputs__(self):
         if not self.lang:
@@ -29,9 +30,9 @@ class EntityShape(BaseModel):
             raise EidError("We need an entityshape EID")
         if not re.match(self.eid_regex, self.eid):
             raise EidError("EID has to be E followed by only numbers like this: E100")
-        if not self.qid:
+        if not self.entity_id:
             raise QidError("We need an item QID")
-        if not re.match(self.qid_regex, self.qid):
+        if not re.match(self.entity_id_regex, self.entity_id):
             raise QidError("QID has to be Q followed by only numbers like this: Q100")
 
     def validate_and_get_result(self) -> Result:
@@ -44,15 +45,20 @@ class EntityShape(BaseModel):
     def __validate__(self):
         shape: Shape = Shape(self.eid, self.lang)
         comparison: CompareShape = CompareShape(
-            shape.get_schema_shape(), self.qid, self.lang
+            shape.get_schema_shape(), self.entity_id, self.lang
         )
-        self.compare_shape_result: dict = {
+        self.compare_shape_result = {}
+        self.compare_shape_result = {
             "general": comparison.get_general(),
             "properties": comparison.get_properties(),
             "statements": comparison.get_statements(),
         }
 
     def __parse_result__(self) -> Result:
-        self.result = Result(**self.compare_shape_result)
-        self.result.analyze()
-        return self.result
+        if self.compare_shape_result:
+            self.result = Result(**self.compare_shape_result)
+            self.result.lang = self.lang
+            self.result.analyze()
+            return self.result
+        else:
+            return Result()

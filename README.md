@@ -1,5 +1,7 @@
 # [Entityshape](https://www.wikidata.org/wiki/Q119899931)
-A python library to compare a wikidata item with an entityschema
+A python library to compare a wikidata entity 
+(item or lexeme) with a 
+[Wikidata Entity Schema](https://www.wikidata.org/wiki/Wikidata:WikiProject_Schemas).
 
 Based on https://github.com/Teester/entityshape by Mark Tully 
 and https://github.com/dpriskorn/PyEntityshape by Dennis Priskorn
@@ -19,6 +21,9 @@ It is still a bit unclear if and how the qualifier validation works.
 Only Wikidata is supported currently when fetching labels for the result.
 If you need support for other Wikibase installations, [comment here](https://github.com/dpriskorn/entityshape/issues/15).
 
+Validation of lexemes is still considered experimental. 
+Feel free to open an issue with a working or non-working example.
+
 # Installation
 Get it from pypi
 
@@ -35,7 +40,7 @@ Example notebooks with code for validation of multiple items:
 ## CLI
 Example:
 ```
-e = EntityShape(eid="E1", lang="en", qid="Q1")
+e = EntityShape(eid="E1", lang="en", entity_id="Q1")
 result = e.validate_and_get_result()
 # Get human readable result
 print(result)

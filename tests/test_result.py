@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict
+from typing import Any, Dict
 from unittest import TestCase
 
 from entityshape import Result
@@ -1156,37 +1156,24 @@ class TestResult(TestCase):
     def test__repr__hiking_path_with_1_missing_required_property_result(self):
         assert (
             repr(self.hiking_path_with_1_missing_required_property_result)
-            == "Valid: False\nrequired_properties_that_are_missing: {'P2043'}"
+            == "Valid: False\nRequired properties that are missing: length (P2043)"
         )
 
     def test__repr__campsite_not_allowed_p625_result(self):
         assert repr(self.campsite_not_allowed_p625_result) == (
             "Valid: False\n"
-            "properties_with_too_many_statements: {'P625'}\n"
-            "required_properties_that_are_missing: {'P2043'}"
-        )
-        assert str(self.campsite_not_allowed_p625_result) == (
-            "Valid: False\n"
-            "properties_with_too_many_statements: {'P625'}\n"
-            "required_properties_that_are_missing: {'P2043'}"
+            "Properties with too many statements: coordinate location (P625)\n"
+            "Required properties that are missing: length (P2043)"
         )
 
     def test__repr__party_member_missing_p37_result(self):
-        assert (
-            repr(self.party_member_missing_p37_result)
-            == "Valid: False\nproperties_without_enough_correct_statements: {'P39'}"
-        )
-        assert (
-            str(self.party_member_missing_p37_result)
-            == "Valid: False\nproperties_without_enough_correct_statements: {'P39'}"
+        assert repr(self.party_member_missing_p37_result) == (
+            "Valid: False\n"
+            "Properties without enough correct statements: position held (P39)"
         )
 
     def test__repr__campsite_missing_correct_p31_result(self):
         assert (
             repr(self.campsite_missing_correct_p31_result)
-            == "Valid: False\nproperties_without_enough_correct_statements: {'P31'}"
-        )
-        assert (
-            str(self.campsite_missing_correct_p31_result)
-            == "Valid: False\nproperties_without_enough_correct_statements: {'P31'}"
+            == "Valid: False\nProperties without enough correct statements: instance of (P31)"
         )

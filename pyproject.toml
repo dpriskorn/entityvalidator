@@ -18,6 +18,7 @@ packages = [
 pydantic = "^1.10.9"
 python = ">=3.8,<=3.12"
 requests = "^2.28.1"
+wikibaseintegrator = "^0.12.4"
 
 [tool.poetry.group.dev.dependencies]
 rich = "^13.4.2"

@@ -16,6 +16,9 @@ The shape and compareshape classes currently only support:
 
 It is still a bit unclear if and how the qualifier validation works.
 
+Only Wikidata is supported currently when fetching labels for the result.
+If you need support for other Wikibase installations, [comment here](https://github.com/dpriskorn/entityshape/issues/15).
+
 # Installation
 Get it from pypi
 
@@ -36,7 +39,7 @@ e = EntityShape(eid="E1", lang="en", qid="Q1")
 result = e.validate_and_get_result()
 # Get human readable result
 print(result)
-"Valid: False\nproperties_without_enough_correct_statements: {'P31'}"
+"Valid: False\nProperties_without_enough_correct_statements: instance of (P31)"
 # Access the data
 print(result.properties_without_enough_correct_statements)
 "{'P31'}"
@@ -53,7 +56,7 @@ It currently checks these five conditions that all have to be false for the item
 5.   statements with properties that are not allowed found
 
 ## Known working schemas
-This library currently only supports a subset of all features in the ShEx specifikation.
+This library currently only supports a subset of all features in the ShEx specification.
 
 The following Entity Schemas are known to work:
 * [hiking path](https://www.wikidata.org/w/index.php?title=EntitySchema:E375&oldid=1833851062)

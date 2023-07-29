@@ -1068,6 +1068,21 @@ party_member_missing_p37: Dict[Any, Any] = {
         },
     },
 }
+furrywikibase_convention_with_1_missing_required_property: Dict[Any, Any] = {
+    "error": "",
+    "general": {},
+    "name": "ConFuzzled 2019",
+    "properties": {
+        "P1": {
+            "name": "instance of",
+            "necessity": "required",
+            "response": "missing",
+        }
+    },
+    "schema": "E1",
+    "statements": {},
+    "validity": {},
+}  # P1 instance of is missing (this is fabricated for test purposes)
 
 
 class TestResult(TestCase):
@@ -1084,6 +1099,10 @@ class TestResult(TestCase):
         self.campsite_not_allowed_p625_result.analyze()
         self.party_member_missing_p37_result = Result(**party_member_missing_p37)
         self.party_member_missing_p37_result.analyze()
+        self.furrywikibase_convention_with_1_missing_required_property_result = Result(
+            **furrywikibase_convention_with_1_missing_required_property
+        )
+        self.furrywikibase_convention_with_1_missing_required_property_result.analyze()
 
     def test___find_properties_with_too_many_statements__zero(self):
         assert (
@@ -1182,5 +1201,18 @@ class TestResult(TestCase):
         self.party_member_missing_p37_result.lang = "da"
         assert repr(self.party_member_missing_p37_result) == (
             "Valid: False\nProperties without enough "
-            "fffcorrect statements: embede (P39)"
+            "correct statements: embede (P39)"
+        )
+
+    def test_furrywikibase_convention_missing_p1(self):
+
+        self.furrywikibase_convention_with_1_missing_required_property_result.wikibase_url = (
+            "https://furry.wikibase.cloud"
+        )
+        self.furrywikibase_convention_with_1_missing_required_property_result.mediawiki_api_url = (
+            "https://furry.wikibase.cloud/w/api.php"
+        )
+        assert (
+            repr(self.furrywikibase_convention_with_1_missing_required_property_result)
+            == "Valid: False\nRequired properties that are missing: instance of (P1)"
         )

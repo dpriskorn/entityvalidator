@@ -29,6 +29,8 @@ class Result(BaseModel):
     properties_that_are_not_allowed: Set[str] = set()
     statements_with_property_that_is_not_allowed: Set[str] = set()
     lang: str = "en"
+    wikibase_url: str = "http://www.wikidata.org"
+    mediawiki_api_url: str = "https://www.wikidata.org/w/api.php"
 
     @property
     def some_required_properties_are_missing(self):
@@ -171,9 +173,10 @@ class Result(BaseModel):
         else:
             from wikibaseintegrator.wbi_config import config as wbi_config  # type: ignore
 
-            wbi_config[
-                "USER_AGENT"
-            ] = "entityshape (https://github.com/dpriskorn/entityshape)"
+            # Update the WBI config with the values from the entityshape config
+            # This enables support for any Wikibase
+            wbi_config["MEDIAWIKI_API_URL"] = self.mediawiki_api_url
+            wbi_config["WIKIBASE_URL"] = self.wikibase_url
             wbi = WikibaseIntegrator()
             if self.properties_with_too_many_statements_found:
                 properties_string = self.get_properties_as_a_string_with_labels_and_pid(

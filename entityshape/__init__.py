@@ -22,6 +22,9 @@ class EntityShape(BaseModel):
     eid_regex = re.compile(r"E\d+")
     entity_id_regex = re.compile(r"[QL]\d+")
     compare_shape_result: Optional[Dict[str, Any]] = None
+    wikibase_url: str = "http://www.wikidata.org"
+    mediawiki_api_url: str = "https://www.wikidata.org/w/api.php"
+    user_agent: str = "entityshape (https://github.com/dpriskorn/entityshape)"
 
     def __check_inputs__(self):
         if not self.lang:
@@ -45,7 +48,11 @@ class EntityShape(BaseModel):
     def __validate__(self):
         shape: Shape = Shape(self.eid, self.lang)
         comparison: CompareShape = CompareShape(
-            shape.get_schema_shape(), self.entity_id, self.lang
+            shape.get_schema_shape(),
+            self.entity_id,
+            self.lang,
+            wikibase_url=self.wikibase_url,
+            mediawiki_api_url=self.mediawiki_api_url,
         )
         self.compare_shape_result = {}
         self.compare_shape_result = {

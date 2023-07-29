@@ -109,3 +109,17 @@ class TestEntityShape(TestCase):
         # except KeyError:
         #     print(
         #         f"Got a keyerror for the entity {entity_id}, this is a known bug with entityshape, see https://github.com/dpriskorn/entityshape/issues/2")
+
+    def test_labels_from_custom_wikibase_valid_qid(self):
+        eid = "E1"  # see https://furry.wikibase.cloud/wiki/EntitySchema:E1
+        wikibase_url = "https://furry.wikibase.cloud"
+        mediawiki_api_url = "https://furry.wikibase.cloud/w/api.php"
+        e = EntityShape(
+            entity_id="Q3",
+            eid=eid,
+            lang="en",
+            mediawiki_api_url=mediawiki_api_url,
+            wikibase_url=wikibase_url,
+        )
+        e.validate_and_get_result()
+        print(e.result)

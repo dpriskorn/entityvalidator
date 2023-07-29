@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from entityshape.enums import Necessity, StatementResponse
+from entityshape.enums import Necessity
 
 
 class StatementValue(BaseModel):

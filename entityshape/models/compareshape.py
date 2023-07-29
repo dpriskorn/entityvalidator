@@ -1,13 +1,15 @@
 """
+Copyright 2023 Dennis Priskorn
 Copyright 2021 Mark Tully
 Compares a json shape from shape.py with wikidata json
 """
 import requests
 from requests import Response
 
-
-class WikidataError(BaseException):
-    pass
+from entityshape.exceptions import (
+    WikibaseEntitySchemaDownloadError,
+    WikibasePropertiesDownloadError,
+)
 
 
 class CompareShape:
@@ -23,9 +25,18 @@ class CompareShape:
     :returns statements: a json representation of the conformity of each statement in the entity
     """
 
-    def __init__(self, shape: dict, entity: str, language: str):
+    def __init__(
+        self,
+        shape: dict,
+        entity: str,
+        language: str,
+        mediawiki_api_url: str,
+        wikibase_url: str,
+    ):
         self._entity: str = entity
         self._shape: dict = shape
+        self.mediawiki_api_url = mediawiki_api_url
+        self.wikibase_url = wikibase_url
         self._property_responses: dict = {}
 
         self._get_entity_json()
@@ -160,14 +171,15 @@ class CompareShape:
         """
         Downloads the entity from wikidata
         """
-        url: str = (
-            f"https://www.wikidata.org/wiki/Special:EntityData/{self._entity}.json"
-        )
+        url: str = f"{self.wikibase_url}/wiki/Special:EntityData/{self._entity}.json"
         response: Response = requests.get(url)
         if response.status_code == 200:
             self._entities = response.json()
         else:
-            raise WikidataError(f"Got {response.status_code} from {url}")
+            raise WikibaseEntitySchemaDownloadError(
+                f"Got {response.status_code} from {url}. "
+                f"Please check that the configuration is correct"
+            )
 
     def _get_props(self, claims: dict):
         """
@@ -194,14 +206,18 @@ class CompareShape:
         for element in wikidata_property_list:
             required_properties: str = "|".join(element)
             url: str = (
-                f"https://www.wikidata.org/w/api.php?action=wbgetentities&ids="
+                f"{self.mediawiki_api_url}?action=wbgetentities&ids="
                 f"{required_properties}&props=labels&languages={language}&format=json"
             )
             response: Response = requests.get(url)
             if response.status_code == 200:
                 json_text: dict = response.json()
+                print(url)
+                # print(json_text)
             else:
-                raise WikidataError(f"Got {response.status_code} from {url}")
+                raise WikibasePropertiesDownloadError(
+                    f"Got {response.status_code} from {url}"
+                )
             for item in element:
                 try:
                     self._names[json_text["entities"][item]["id"]] = json_text[
@@ -238,7 +254,9 @@ class CompareShape:
         if response.status_code == 200:
             json_text: dict = response.json()
         else:
-            raise WikidataError(f"Got {response.status_code} from {url}")
+            raise WikibaseEntitySchemaDownloadError(
+                f"Got {response.status_code} from {url}"
+            )
         if required_property in json_text["claims"]:
             for key in json_text["claims"][required_property]:
                 required = (

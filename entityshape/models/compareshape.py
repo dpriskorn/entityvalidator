@@ -239,10 +239,10 @@ class CompareShape:
         required: str = ""
         if "required" in shape_claim["required"]:
             shape_claim_required = shape_claim["required"]["required"]
-            required_property: str = list(shape_claim_required.keys())[0]
+            required_property: str = next(iter(list(shape_claim_required.keys())))
             required_value: str = shape_claim_required[required_property][0]
         else:
-            required_property: str = list(shape_claim["required"].keys())[0]
+            required_property: str = next(iter(list(shape_claim["required"].keys())))
             required_value: str = shape_claim["required"][required_property][0]
 
         query_entity: str = datavalue["value"]["id"]
@@ -273,13 +273,13 @@ class CompareShape:
         if required == "present":
             allowed = "correct" if qualifiers == "" else qualifiers
         if required == "incorrect":
-            if extra == "extra":
-                allowed = "allowed"
-            else:
-                if qualifiers == "":
-                    allowed = "allowed"
-                else:
-                    allowed = qualifiers
+            allowed = (
+                "allowed"
+                if extra == "extra"
+                else "allowed"
+                if qualifiers == ""
+                else qualifiers
+            )
         if allowed == "incorrect" and extra == "extra":
             allowed = "allowed"
         if required == "missing":

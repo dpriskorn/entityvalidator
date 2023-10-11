@@ -2,9 +2,10 @@ import re
 from re import Pattern
 from typing import Any, Dict
 
+import requests
 from pydantic import BaseModel
 
-from entityshape.exceptions import EntityIdError
+from entityshape.exceptions import EntityIdError, LangError
 from entityshape.models.compareshape import CompareShape
 from entityshape.models.result import Result
 from entityshape.models.shape import Shape
@@ -24,6 +25,8 @@ class Entity(BaseModel):
     user_agent: str = "entityshape (https://github.com/dpriskorn/entityshape)"
 
     def __check_inputs__(self):
+        if not 2 <= len(self.lang) <= 3:
+            raise LangError("Language code is not correct length")
         if not re.match(self.entity_id_regex, self.entity_id):
             raise EntityIdError(
                 "The entity id has to be Q or L followed by only numbers like this: Q100"
@@ -61,3 +64,9 @@ class Entity(BaseModel):
         self.__check_inputs__()
         self.__validate__()
         self.__parse_result__()
+
+    def __get_entity_data__(self):
+        """Only used for testing"""
+        url = f"{self.wikibase_url}/wiki/Special:EntityData/{self.entity_id}.json"
+        response = requests.get(url)
+        self.entity_data = response.json()

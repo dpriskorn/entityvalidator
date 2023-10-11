@@ -10,6 +10,7 @@ import requests
 from requests import Response
 
 from entityshape.exceptions import (
+    MissingInformationError,
     WikibaseEntitySchemaDownloadError,
 )
 
@@ -46,6 +47,8 @@ class CompareShape:
         self._property_responses: dict = {}
 
         # self._get_entity_json()
+        if not self.entity_data:
+            raise MissingInformationError()
         if self.entity_data["entities"][self._entity]:
             self._get_props(self.entity_data["entities"][self._entity]["claims"])
         # self._get_property_names(language)

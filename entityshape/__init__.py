@@ -38,6 +38,8 @@ class EntityShape(BaseModel):
     entity_schema_data: Dict[str, Any] = {}
 
     def __check_inputs__(self):
+        if not 2 <= len(self.lang) <= 3:
+            raise LangError("Language code is not correct length")
         if not re.match(self.eid_regex, self.eid):
             raise EidError("EID has to be E followed by only numbers like this: E100")
         if not self.entity_ids:
@@ -109,4 +111,6 @@ class EntityShape(BaseModel):
         url: str = f"https://www.wikidata.org/wiki/EntitySchema:{self.eid}?action=raw"
         # todo add user agent
         response = requests.get(url)
+        if response.status_code == 404:
+            raise WikibaseEntitySchemaDownloadError()
         self.entity_schema_data: dict = response.json()

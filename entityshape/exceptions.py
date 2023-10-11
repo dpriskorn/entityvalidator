@@ -24,3 +24,7 @@ class WikibasePropertiesDownloadError(BaseException):
 
 class NoEntitySchemaDataError(BaseException):
     pass
+
+
+class MissingInformationError(BaseException):
+    pass

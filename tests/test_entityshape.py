@@ -2,35 +2,13 @@ import asyncio
 import time
 from unittest import TestCase
 
-from entityshape import EntityShape
+from entityshape import EntityShape, WikibaseEntitySchemaDownloadError
 from entityshape.models.result import Result
 
 # from rich.console import Console
 
 
 class TestEntityShape(TestCase):
-    # def test_get_result_invalid_eid(self):
-    #     e = EntityShape(eid="eeeE1", lang="en", entity_id="Q1")
-    #     with self.assertRaises(EidError):
-    #         e.validate_and_get_result()
-    #     # print(e.result)
-    #     # assert e.result != {}
-    #
-    # def test_get_result_invalid_lang(self):
-    #     """The API does not seem to check whether the lang code is valid or not"""
-    #     e = EntityShape(eid="E376", lang="", entity_id="Q119853967")
-    #     with self.assertRaises(LangError):
-    #         e.validate_and_get_result()
-    #     # assert e.result.is_valid is True
-    #     # print(e.result)
-    #     # assert e.result != {}
-    #
-    # def test_get_result_invalid_entity_id(self):
-    #     e = EntityShape(eid="E1", lang="en", entity_id="qqqqQ1")
-    #     with self.assertRaises(EntityIdError):
-    #         e.validate_and_get_result()
-    #     # print(e.result)
-    #     # assert e.result != {}
 
     # TODO this fails because of ?
     # def test_get_result_valid(self):
@@ -180,3 +158,8 @@ class TestEntityShape(TestCase):
         # assert result.is_valid is True
         # print(es.entities[0].result)
         # assert es.entities[0].result == Result()
+
+    def test_get_result_invalid_eid(self):
+        es = EntityShape(eid="eeeE1", entity_ids=[])
+        with self.assertRaises(WikibaseEntitySchemaDownloadError):
+            es.download_schema()

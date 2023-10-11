@@ -171,9 +171,9 @@ class TestEntityShape(TestCase):
         print(f"Test execution time: {execution_time} seconds")
 
         assert len(es.entities) == 10
-        for entity in es.entities:
-            print(entity.result)
-            print(entity.result.model_dump())
+        # for entity in es.entities:
+        #     print(entity.result)
+        #     print(entity.result.model_dump())
         # assert es.entities[0].entity_data != {}
         # result = es.entities[0].result
         # assert result.analyzed is True

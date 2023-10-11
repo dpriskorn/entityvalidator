@@ -12,3 +12,11 @@ class EidError(BaseException):
 
 class ApiError(BaseException):
     pass
+
+
+class WikibaseEntitySchemaDownloadError(BaseException):
+    pass
+
+
+class WikibasePropertiesDownloadError(BaseException):
+    pass

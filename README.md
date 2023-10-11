@@ -1,5 +1,7 @@
 # [Entityshape](https://www.wikidata.org/wiki/Q119899931)
-A python library to compare a wikidata item with an entityschema
+A python library to compare a wikidata entity 
+(item or lexeme) with a 
+[Wikibase Entity Schema](https://www.wikidata.org/wiki/Wikidata:WikiProject_Schemas).
 
 Based on https://github.com/Teester/entityshape by Mark Tully 
 and https://github.com/dpriskorn/PyEntityshape by Dennis Priskorn
@@ -7,6 +9,7 @@ and https://github.com/dpriskorn/PyEntityshape by Dennis Priskorn
 # Features
 * compare a given wikidata item with an entityschema and dig into missing properties, too many statement, etc.
 * determine whether an item is valid according to a certain schema or not
+* support for any Wikibase
 
 # Limitations
 The shape and compareshape classes currently only support:
@@ -16,8 +19,8 @@ The shape and compareshape classes currently only support:
 
 It is still a bit unclear if and how the qualifier validation works.
 
-Only Wikidata is supported currently when fetching labels for the result.
-If you need support for other Wikibase installations, [comment here](https://github.com/dpriskorn/entityshape/issues/15).
+Validation of lexemes is still considered experimental. 
+Feel free to open an issue with a working or non-working example.
 
 # Installation
 Get it from pypi
@@ -35,7 +38,14 @@ Example notebooks with code for validation of multiple items:
 ## CLI
 Example:
 ```
-e = EntityShape(eid="E1", lang="en", qid="Q1")
+# Note that we default to English so the lang parameter here is optional. 
+# Note that we default to Wikidata so the mediawiki_api_url and wikibase_url parameters here are optional. 
+e = EntityShape(eid="E1", 
+                entity_id="Q1", 
+                lang="en", 
+                # mediawiki_api_url='http://localhost/api.php', 
+                # wikibase_url='http://wikibase.svc'
+                )
 result = e.validate_and_get_result()
 # Get human readable result
 print(result)

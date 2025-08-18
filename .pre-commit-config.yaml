@@ -38,7 +38,7 @@ repos:
       # Tell ruff to fix sorting of imports
       - "--fix"
       - "--format=github"
-      - "--target-version=py37"
+      - "--target-version=py311"
       - "."
     # types: [python]
     pass_filenames: false

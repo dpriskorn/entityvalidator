@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from entityvalidator import Entity, EntityIdError, LangError
-
 from entityvalidator.exceptions import MissingInformationError
 
 

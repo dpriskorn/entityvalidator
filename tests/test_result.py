@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from entityvalidator.models.result import Result
 
-hiking_path_with_1_missing_required_property: Dict[Any, Any] = {
+hiking_path_with_1_missing_required_property: dict[Any, Any] = {
     "error": "",
     "general": {},
     "name": "hiking path",
@@ -240,7 +240,7 @@ hiking_path_with_1_missing_required_property: Dict[Any, Any] = {
     },
     "validity": {},
 }  # P2043 length is missing
-campsite_missing_correct_p31: Dict[Any, Any] = {
+campsite_missing_correct_p31: dict[Any, Any] = {
     "error": "",
     "general": {},
     "name": "campsite",
@@ -429,7 +429,7 @@ campsite_missing_correct_p31: Dict[Any, Any] = {
     },
     "validity": {},
 }
-campsite_not_allowed_p625: Dict[Any, Any] = {
+campsite_not_allowed_p625: dict[Any, Any] = {
     "error": "",
     "general": {},
     "name": "hiking path",
@@ -696,7 +696,7 @@ campsite_not_allowed_p625: Dict[Any, Any] = {
     },
     "validity": {},
 }
-party_member_missing_p37: Dict[Any, Any] = {
+party_member_missing_p37: dict[Any, Any] = {
     "general": {},
     "properties": {
         "P21": {
@@ -1068,7 +1068,7 @@ party_member_missing_p37: Dict[Any, Any] = {
         },
     },
 }
-furrywikibase_convention_with_1_missing_required_property: Dict[Any, Any] = {
+furrywikibase_convention_with_1_missing_required_property: dict[Any, Any] = {
     "error": "",
     "general": {},
     "name": "ConFuzzled 2019",

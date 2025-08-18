@@ -5,7 +5,7 @@ from typing import Any
 import requests
 from pydantic import BaseModel
 
-from entityvalidator.exceptions import EntityIdError, LangError
+from entityvalidator.exceptions import EntityIdError
 from entityvalidator.models.compareshape import CompareShape
 from entityvalidator.models.result import Result
 from entityvalidator.models.shape import Shape
@@ -24,8 +24,6 @@ class Entity(BaseModel):
     user_agent: str = "entityshape (https://github.com/dpriskorn/entityshape)"
 
     def __check_inputs__(self):
-        if not 2 <= len(self.lang) <= 3:
-            raise LangError("Language code is not correct length")
         if not re.match(self.entity_id_regex, self.entity_id):
             raise EntityIdError(
                 "The entity id has to be Q or L followed by only numbers like this: Q100"
@@ -34,7 +32,6 @@ class Entity(BaseModel):
     def __validate__(self):
         shape: Shape = Shape(
             # entity_schema_id=self.eid,
-            language=self.lang,
             entity_schema_data=self.entity_schema_data,
         )
         comparison: CompareShape = CompareShape(
@@ -53,7 +50,6 @@ class Entity(BaseModel):
     def __parse_result__(self) -> None:
         if self.compare_shape_result:
             self.result = Result(**self.compare_shape_result)
-            self.result.lang = self.lang
             self.result.analyze()
 
     def check_and_validate(self) -> None:

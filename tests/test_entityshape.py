@@ -4,7 +4,6 @@ from unittest import TestCase
 
 from entityvalidator import EntityValidator, WikibaseEntitySchemaDownloadError
 
-
 # from rich.console import Console
 
 

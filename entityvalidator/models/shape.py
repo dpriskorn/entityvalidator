@@ -14,12 +14,9 @@ class Shape(BaseModel):
     """
     Produces a shape in the form of a json for a wikidata entityschema (e.g. E10)
 
-    :param language: The language to get the schema name in
-
     :return shape: a json representation of the entityschema
     """
 
-    language: str
     entity_schema_data: dict[str, Any]
 
     # self.name: str = ""
@@ -42,15 +39,6 @@ class Shape(BaseModel):
         :return: the json representation of the schema
         """
         return self.schema_shape
-
-    def get_name(self):
-        """
-        Gets the name of the schema
-        :return: the name of the schema
-        """
-        if self.language in self.entity_schema_data["labels"]:
-            return self.entity_schema_data["labels"][self.language]
-        return ""
 
     def _translate_schema(self):
         """

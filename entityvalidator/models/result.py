@@ -27,7 +27,6 @@ class Result(BaseModel):
     properties_without_enough_correct_statements: set[str] = set()
     properties_that_are_not_allowed: set[str] = set()
     statements_with_property_that_is_not_allowed: set[str] = set()
-    lang: str = "en"
     wikibase_url: str = "http://www.wikidata.org"
     mediawiki_api_url: str = "https://www.wikidata.org/w/api.php"
 

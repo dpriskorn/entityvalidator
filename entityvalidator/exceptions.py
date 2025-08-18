@@ -1,7 +1,3 @@
-class LangError(BaseException):
-    pass
-
-
 class EntityIdError(BaseException):
     pass
 

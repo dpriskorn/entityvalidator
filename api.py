@@ -9,7 +9,6 @@ from entityvalidator import (
     EidError,
     EntityIdError,
     EntityValidator,
-    LangError,
     WikibaseEntitySchemaDownloadError,
 )
 from entityvalidator.exceptions import (
@@ -32,10 +31,10 @@ def root_redirect():
 @router.get("/validate")
 def validate_entities(
     # mandatory
-    eid: str = Query(..., description="EntitySchema ID, ex. E100"),  # noqa: B008
+    eid: str = Query(..., description="EntitySchema ID, ex. E100"),
     entity_ids: str = Query(
         ..., description="Comma-separated list of entity IDs, e.g. Q42,Q43"
-    ),  # noqa: B008
+    ),
 ):
     """
     Validate a list of entity IDs against a specific Wikibase entity schema.
@@ -75,11 +74,6 @@ def validate_entities(
             "results": [e.to_dict() for e in entity_shape.entities],
         }
 
-    except LangError as e:
-        raise HTTPException(
-            status_code=422,
-            detail={"error": "Invalid language", "message": str(e)},
-        ) from e
     except (EntityIdError, EidError) as e:
         raise HTTPException(
             status_code=422,

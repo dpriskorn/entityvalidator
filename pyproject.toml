@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "Entityshape"
+name = "EntityValidator"
 version = "0.2.0"
 description = "Python library to validate Wikidata items."
 authors = ["Mark Tully aka Teester", "Dennis Priskorn <68460690+dpriskorn@users.noreply.github.com>"]
@@ -11,17 +11,19 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 packages = [
-    { include = "entityshape" },
+    { include = "entityvalidator" },
 ]
 
 [tool.poetry.dependencies]
 pydantic = "^2.4.2"
-python = ">=3.8,<=3.12"
+python = ">=3.9,<4.0"
 requests = "^2.28.1"
 wikibaseintegrator = "^0.12.4"
 aiohttp = "^3.8.6"
 asyncio = "^3.4.3"
 rich = "^13.6.0"
+fastapi = "^0.116.1"
+uvicorn = "^0.35.0"
 
 [tool.poetry.group.dev.dependencies]
 rich = "^13.4.2"
@@ -33,7 +35,7 @@ mypy = "^1.1.1"
 pre-commit = "^2.20.0"
 pytest = "^7.1.3"
 ruff = "^0.0.263"
-safety = "^2.2.0"
+# safety = "^2.2.0"
 tomli = "^2.0.1"
 types-python-dateutil = "^2.8.19.2"
 types-requests = "^2.28.11.2"
@@ -92,6 +94,7 @@ select = [
 ignore = [
   "A003",
   "ARG002",
+  "B008", # Query()
   "DTZ003",
   "EXE002",
   "F401",
@@ -115,6 +118,11 @@ ignore = [
   "S501",
   "PLR0913",
   ]
+# Exclude files we did not author
+exclude = [
+    "entityvalidator/models/shape.py",
+    "entityvalidator/models/compareshape.py",
+]
 line-length = 160
 target-version = "py38"
 
@@ -126,8 +134,11 @@ max-complexity = 11
 
 [tool.ruff.per-file-ignores]
 "tests/*" = ["PT009", "PT018", "RUF001", "RUF003", "S101", "ISC001"]
-"entityshape/models/compareshape.py" = ["SIM114"]
+# "entityvalidator/models/compareshape.py" = ["SIM114"]
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+ignore_missing_imports = true

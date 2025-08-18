@@ -2,14 +2,15 @@ import asyncio
 import logging
 import re
 from re import Pattern
-from typing import Any, Dict, List
+from typing import Any
 
 import aiohttp
 import requests
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from rich.console import Console
 
-from entityshape.exceptions import (
+import config
+from entityvalidator.exceptions import (
     ApiError,
     EidError,
     EntityIdError,
@@ -17,44 +18,44 @@ from entityshape.exceptions import (
     NoEntitySchemaDataError,
     WikibaseEntitySchemaDownloadError,
 )
-from entityshape.models.entity import Entity
+from entityvalidator.models.entity import Entity
 
 console = Console()
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class EntityShape(BaseModel):
+class EntityValidator(BaseModel):
     """Downloads and validates Wikidata entities"""
 
-    entity_ids: List[str]
-    eid: str  # entityshape
-    lang: str = "en"  # language defaults to English
+    entity_ids: list[str] = Field(
+        ..., min_length=1, description="List of entity IDs, at least one required"
+    )
+    eid: str = Field(
+        ..., min_length=2, description="EntitySchema ID in a Wikibase"
+    )  # entityshape
     eid_regex: Pattern = re.compile(r"E\d+")
     wikibase_url: str = "http://www.wikidata.org"
     mediawiki_api_url: str = "https://www.wikidata.org/w/api.php"
-    user_agent: str = "entityshape (https://github.com/dpriskorn/entityshape)"
-    entities: List[Entity] = []
-    entity_schema_data: Dict[str, Any] = {}
+    user_agent: str = config.user_agent
+    entities: list[Entity] = []
+    entity_schema_data: dict[str, Any] = {}
 
-    def __check_inputs__(self):
-        if not 2 <= len(self.lang) <= 3:
-            raise LangError("Language code is not correct length")
+    def __check_inputs__(self) -> None:
         if not re.match(self.eid_regex, self.eid):
             raise EidError("EID has to be E followed by only numbers like this: E100")
-        if not self.entity_ids:
-            raise EntityIdError("We need entity ids")
         # if not re.match(self.entity_id_regex, self.entity_id):
         #     raise QidError("QID has to be Q followed by only numbers like this: Q100")
 
-    def download_and_validate(self):
+    def download_and_validate(self) -> None:
         self.__check_inputs__()  # Check if inputs are valid
         self.download_schema()
         if not self.entity_schema_data:
             raise NoEntitySchemaDataError("Got no entity schema data from Wikidata")
         with console.status("Downloading entity json"):
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(self.__download_json__())
+            asyncio.run(
+                self.__download_json__()
+            )  # safely run async without nest_asyncio
         print(f"Downloaded {len(self.entities)} entities")
         if self.entities:
             with console.status("Validating entities"):
@@ -104,7 +105,7 @@ class EntityShape(BaseModel):
                     f"Please check that the configuration is correct"
                 )
 
-    def download_schema(self):
+    def download_schema(self) -> None:
         """
         Downloads the schema from wikidata
         """

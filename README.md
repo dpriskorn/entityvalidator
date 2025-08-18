@@ -1,4 +1,4 @@
-# [Entityshape](https://www.wikidata.org/wiki/Q119899931)
+# [EntityValidator](https://www.wikidata.org/wiki/Q119899931)
 A python library to compare a wikidata entity 
 (item or lexeme) with a 
 [Wikibase Entity Schema](https://www.wikidata.org/wiki/Wikidata:WikiProject_Schemas).
@@ -25,7 +25,7 @@ Feel free to open an issue with a working or non-working example.
 # Installation
 Get it from pypi
 
-`$ pip install pyentityshape`
+`$ pip install entityvalidator`
 
 # Usage
 
@@ -40,7 +40,7 @@ Example:
 ```
 # Note that we default to English so the lang parameter here is optional. 
 # Note that we default to Wikidata so the mediawiki_api_url and wikibase_url parameters here are optional. 
-e = EntityShape(eid="E1", 
+e = EntityValidator(eid="E1", 
                 entity_id="Q1", 
                 lang="en", 
                 # mediawiki_api_url='http://localhost/api.php', 
@@ -56,7 +56,7 @@ print(result.properties_without_enough_correct_statements)
 ```
 
 ## Validation
-The is_valid method on the Result object mimics all red warnings displayed by https://www.wikidata.org/wiki/User:Teester/EntityShape.js 
+The is_valid method on the Result object mimics all red warnings displayed by https://www.wikidata.org/wiki/User:Teester/entityvalidator.js 
 
 It currently checks these five conditions that all have to be false for the item to be valid:
 1.  properties with too many statements found

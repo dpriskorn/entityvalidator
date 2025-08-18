@@ -1,8 +1,6 @@
-from typing import Optional
-
 from pydantic import BaseModel
 
-from entityshape.enums import Necessity
+from entityvalidator.enums import Necessity
 
 
 class StatementValue(BaseModel):
@@ -10,6 +8,6 @@ class StatementValue(BaseModel):
     Limitation:
     response can contain arbitrary strings with missing qualifiers so we cannot predict all possible values :/"""
 
-    necessity: Optional[Necessity] = None
+    necessity: Necessity | None = None
     property: str = ""
     response: str

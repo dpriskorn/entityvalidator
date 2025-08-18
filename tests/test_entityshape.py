@@ -2,24 +2,24 @@ import asyncio
 import time
 from unittest import TestCase
 
-from entityshape import EntityShape, WikibaseEntitySchemaDownloadError
-from entityshape.models.result import Result
+from entityvalidator import EntityValidator, WikibaseEntitySchemaDownloadError
+
 
 # from rich.console import Console
 
 
-class TestEntityShape(TestCase):
+class TestEntityValidator(TestCase):
 
     # TODO this fails because of ?
     # def test_get_result_valid(self):
-    #     e = EntityShape(eid="E376", lang="en", qid="Q96308969")
+    #     e = EntityValidator(eid="E376", lang="en", qid="Q96308969")
     #     e.get_result()
     #     print(e.result)
     #     assert isinstance(e.result, Result)
     #     assert e.result.is_valid is True
 
     # def test_get_result_invalid_missing_operator(self):
-    #     e = EntityShape(eid="E376", lang="en", entity_id="Q96308969")
+    #     e = EntityValidator(eid="E376", lang="en", entity_id="Q96308969")
     #     e.validate_and_get_result()
     #     # print(e.result)
     #     assert isinstance(e.result, Result)
@@ -28,7 +28,7 @@ class TestEntityShape(TestCase):
 
     # this fails because of https://github.com/dpriskorn/entityshape/issues/2
     # def test_get_result_invalid_wrong_schema(self):
-    #     e = EntityShape(eid="E375", lang="en", entity_id="Q119853967")
+    #     e = EntityValidator(eid="E375", lang="en", entity_id="Q119853967")
     #     e.get_result()
     #     print(e.result)
     #     assert isinstance(e.result, Result)
@@ -37,7 +37,7 @@ class TestEntityShape(TestCase):
     #     assert e.result.properties_that_are_not_allowed == {"P912", "P625", "P276"}
 
     # def test_get_result_missing_statement_response(self):
-    #     e = EntityShape(eid="E395", lang="en", entity_id="Q4802448")
+    #     e = EntityValidator(eid="E395", lang="en", entity_id="Q4802448")
     #     e.validate_and_get_result()
     #     # print(e.compare_shape_result)
     #     # console = Console()
@@ -47,7 +47,7 @@ class TestEntityShape(TestCase):
     #     assert e.result.properties_without_enough_correct_statements == {"P39"}
     #
     # def test_get_result_weird_statement_response_party_person(self):
-    #     e = EntityShape(eid="E395", lang="en", entity_id="Q20727")
+    #     e = EntityValidator(eid="E395", lang="en", entity_id="Q20727")
     #     e.validate_and_get_result()
     #     assert isinstance(e.result, Result)
     #     assert e.result.is_valid is True
@@ -73,7 +73,7 @@ class TestEntityShape(TestCase):
     #     #     entity_id = result["lexemeId"]["value"].split("/")[-1]
     #     #     print(f"Working on: {entity_id}")
     #     #     entity = wbi.lexeme.get(entity_id)
-    #     e = EntityShape(entity_id="L41172", eid="E34", lang="en")
+    #     e = EntityValidator(entity_id="L41172", eid="E34", lang="en")
     #     e.validate_and_get_result()
     #     print(e.result)
     #     # try:
@@ -96,7 +96,7 @@ class TestEntityShape(TestCase):
     #     eid = "E1"  # see https://furry.wikibase.cloud/wiki/EntitySchema:E1
     #     wikibase_url = "https://furry.wikibase.cloud"
     #     mediawiki_api_url = "https://furry.wikibase.cloud/w/api.php"
-    #     e = EntityShape(
+    #     e = EntityValidator(
     #         entity_id="Q3",
     #         eid=eid,
     #         lang="en",
@@ -107,7 +107,7 @@ class TestEntityShape(TestCase):
     #     print(e.result)
 
     def test__download_json(self):
-        es = EntityShape(eid="E395", lang="en", entity_ids=["Q20727"])
+        es = EntityValidator(eid="E395", entity_ids=["Q20727"])
         # es.__download_json__()
         loop = asyncio.get_event_loop()
         loop.run_until_complete(es.__download_json__())
@@ -116,7 +116,7 @@ class TestEntityShape(TestCase):
         assert es.entities[0].entity_data != {}
 
     def test_download_and_validate_one_item(self):
-        es = EntityShape(eid="E395", lang="en", entity_ids=["Q20727"])
+        es = EntityValidator(eid="E395", entity_ids=["Q20727"])
         es.download_and_validate()
         assert len(es.entities) == 1
         assert es.entities[0].entity_data != {}
@@ -141,7 +141,7 @@ class TestEntityShape(TestCase):
         ]
 
         start_time = time.time()  # Record the start time
-        es = EntityShape(eid="E375", lang="en", entity_ids=entity_ids)
+        es = EntityValidator(eid="E375", entity_ids=entity_ids)
         es.download_and_validate()
         end_time = time.time()  # Record the end time
 
@@ -160,6 +160,6 @@ class TestEntityShape(TestCase):
         # assert es.entities[0].result == Result()
 
     def test_get_result_invalid_eid(self):
-        es = EntityShape(eid="eeeE1", entity_ids=[])
+        es = EntityValidator(eid="eeeE1", entity_ids=[])
         with self.assertRaises(WikibaseEntitySchemaDownloadError):
             es.download_schema()

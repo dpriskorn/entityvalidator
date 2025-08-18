@@ -1,16 +1,16 @@
 from unittest import TestCase
 
-from entityshape import Entity, EntityIdError, LangError
-from entityshape.exceptions import MissingInformationError
+from entityvalidator import Entity, EntityIdError, LangError
+
+from entityvalidator.exceptions import MissingInformationError
 
 
 class TestEntity(TestCase):
     def test_invalid_lang(self):
-        # es = EntityShape(eid="E376", entity_ids=[])
+        # es = EntityValidator(eid="E376", entity_ids=[])
         # es.download_schema()
         e = Entity(
             eid="E376",
-            lang="",
             entity_id="Q119853967",
             entity_data={},
             entity_schema_data={},
@@ -22,11 +22,10 @@ class TestEntity(TestCase):
         # assert e.result != {}
 
     def test_valid_lang(self):
-        # es = EntityShape(eid="E376", entity_ids=[])
+        # es = EntityValidator(eid="E376", entity_ids=[])
         # es.download_schema()
         e = Entity(
             eid="E376",
-            lang="en",
             entity_id="Q119853967",
             entity_data={},
             entity_schema_data={},
@@ -37,7 +36,6 @@ class TestEntity(TestCase):
     def test_get_result_invalid_entity_id(self):
         e = Entity(
             eid="E1",
-            lang="en",
             entity_id="qqqqQ1",
             entity_data={},
             entity_schema_data={},

@@ -14,7 +14,6 @@ from entityvalidator.exceptions import (
     ApiError,
     EidError,
     EntityIdError,
-    LangError,
     NoEntitySchemaDataError,
     WikibaseEntitySchemaDownloadError,
 )

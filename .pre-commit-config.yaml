@@ -11,7 +11,6 @@ repos:
 #    pass_filenames: false
 #    # types: [python]
 
-
   - id: black
     name: black
     language: system
@@ -47,16 +46,16 @@ repos:
  # https://jaredkhan.com/blog/mypy-pre-commit
   - id: mypy
     name: mypy
+    # entry: python -c "import sys; print(sys.argv)"
     entry: mypy
     language: python
-    # use your preferred Python version
-    # language_version: python3.7
-    # additional_dependencies: ["mypy==0.790"]
-    types: [python]
-    # use require_serial so that script
-    # is only called once per commit
+    language_version: python3.13
     require_serial: true
-    exclude: shape.py|compareshape.py
+    # To be able to exclude properly
+    pass_filenames: true
+    types: [python]
+    # args: ["--config-file=pyproject.toml"]
+    exclude: .*(shape|compareshape)\.py$
     # Print the number of files as a sanity-check
     # verbose: true
 

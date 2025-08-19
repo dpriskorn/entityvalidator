@@ -36,6 +36,9 @@ def validate_entities(
     entity_ids: str = Query(
         ..., description="Comma-separated list of entity IDs, e.g. Q42,Q43"
     ),
+    # We only support Wikidata for now
+    # wikibase_url: str = Query(default="http://www.wikidata.org"),
+    # mediawiki_api_url: str = Query(default="https://www.wikidata.org/w/api.php")
 ) -> dict[str, Any]:
     """
     Validate a list of entity IDs against a specific Wikibase entity schema.
@@ -65,14 +68,14 @@ def validate_entities(
     if len(entity_list) > 100:
         raise HTTPException(status_code=400, detail="Maximum 100 entity IDs allowed.")
     try:
-        entity_shape = EntityValidator(
+        entity_validator = EntityValidator(
             entity_ids=entity_list,
             eid=eid,
         )
-        entity_shape.download_and_validate()
+        entity_validator.__download_and_validate__()
 
         return {
-            "results": [e.to_dict() for e in entity_shape.entities],
+            "results": entity_validator.get_results,
         }
 
     except (EntityIdError, EidError) as e:

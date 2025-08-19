@@ -2,7 +2,7 @@ import asyncio
 import logging
 import re
 from re import Pattern
-from typing import Any
+from typing import Any, List
 
 import aiohttp
 import requests
@@ -115,3 +115,8 @@ class EntityValidator(BaseModel):
         if response.status_code == 404:
             raise WikibaseEntitySchemaDownloadError()
         self.entity_schema_data: dict = response.json()
+
+    @property
+    def get_results(self) -> List[dict[str, Any]]:
+        self.__download_and_validate__()
+        return [e.to_dict() for e in self.entities]

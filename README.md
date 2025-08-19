@@ -1,7 +1,6 @@
 # [EntityValidator](https://www.wikidata.org/wiki/Q119899931)
-A python library to compare a wikidata entity 
-(item or lexeme) with a 
-[Wikibase Entity Schema](https://www.wikidata.org/wiki/Wikidata:WikiProject_Schemas).
+A python library and FastAPI backend to compare a wikidata entity 
+(item or lexeme) with a [Wikibase Entity Schema](https://www.wikidata.org/wiki/Wikidata:WikiProject_Schemas).
 
 Based on https://github.com/Teester/entityshape by Mark Tully 
 and https://github.com/dpriskorn/PyEntityshape by Dennis Priskorn
@@ -9,7 +8,7 @@ and https://github.com/dpriskorn/PyEntityshape by Dennis Priskorn
 # Features
 * compare a given wikidata item with an entityschema and dig into missing properties, too many statement, etc.
 * determine whether an item is valid according to a certain schema or not
-* support for any Wikibase
+* the backend currently only support Wikidata, but the library has support for any Wikibase
 
 # Limitations
 The shape and compareshape classes currently only support:
@@ -22,23 +21,23 @@ It is still a bit unclear if and how the qualifier validation works.
 Validation of lexemes is still considered experimental. 
 Feel free to open an issue with a working or non-working example.
 
-# Installation
+~~# Installation
 Get it from pypi
 
-`$ pip install entityvalidator`
+`$ pip install entityvalidator`~~
 
 # Usage
 
-## Jupyter Notebooks
+~~## Jupyter Notebooks
 Example notebooks with code for validation of multiple items: 
 [hiking paths](https://public-paws.wmcloud.org/User:So9q/Validating%20a%20group%20of%20items-all-hiking-paths-in-sweden.ipynb) 
 [campsites](https://public-paws.wmcloud.org/User:So9q/Validating%20a%20group%20of%20items-all-campsites-in-sweden.ipynb) 
-[shelters](https://public-paws.wmcloud.org/User:So9q/Validating%20a%20group%20of%20items-all-shelters-in-sweden.ipynb)
+[shelters](https://public-paws.wmcloud.org/User:So9q/Validating%20a%20group%20of%20items-all-shelters-in-sweden.ipynb)~~
 
 ## CLI
 Example:
 ```
-# Note that we default to English so the lang parameter here is optional. 
+import pprint
 # Note that we default to Wikidata so the mediawiki_api_url and wikibase_url parameters here are optional. 
 e = EntityValidator(eid="E1", 
                 entity_id="Q1", 
@@ -46,13 +45,8 @@ e = EntityValidator(eid="E1",
                 # mediawiki_api_url='http://localhost/api.php', 
                 # wikibase_url='http://wikibase.svc'
                 )
-result = e.validate_and_get_result()
-# Get human readable result
-print(result)
-"Valid: False\nProperties_without_enough_correct_statements: instance of (P31)"
-# Access the data
-print(result.properties_without_enough_correct_statements)
-"{'P31'}"
+# Machine readable json result
+pprint(e.get_result)
 ```
 
 ## Validation
@@ -115,7 +109,8 @@ advice and help with Ruff to make this better.
 GPLv3+
 
 # What I learned
-* Forking other peoples undocumented spaghetti code is not much fun.
+* Forking other peoples undocumented code is not much fun.
 * I want to find a more reliable validator that support somevalue and novalue
 * Pydantic is wonderful yet again it makes working with OOP easy peasy :)
 * Ruff is crazy fast and very nice!
+* FastAPI is super nice

@@ -159,6 +159,6 @@ class TestEntityValidator(TestCase):
         # assert es.entities[0].result == Result()
 
     def test_get_result_invalid_eid(self):
-        es = EntityValidator(eid="eeeE1", entity_ids=[])
+        es = EntityValidator(eid="eeeE1", entity_ids=["Q1"])
         with self.assertRaises(WikibaseEntitySchemaDownloadError):
             es.download_schema()

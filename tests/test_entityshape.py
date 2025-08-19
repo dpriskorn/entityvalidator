@@ -116,7 +116,7 @@ class TestEntityValidator(TestCase):
 
     def test_download_and_validate_one_item(self):
         es = EntityValidator(eid="E395", entity_ids=["Q20727"])
-        es.download_and_validate()
+        es.__download_and_validate__()
         assert len(es.entities) == 1
         assert es.entities[0].entity_data != {}
         result = es.entities[0].result
@@ -141,7 +141,7 @@ class TestEntityValidator(TestCase):
 
         start_time = time.time()  # Record the start time
         es = EntityValidator(eid="E375", entity_ids=entity_ids)
-        es.download_and_validate()
+        es.__download_and_validate__()
         end_time = time.time()  # Record the end time
 
         execution_time = end_time - start_time
@@ -161,4 +161,4 @@ class TestEntityValidator(TestCase):
     def test_get_result_invalid_eid(self):
         es = EntityValidator(eid="eeeE1", entity_ids=["Q1"])
         with self.assertRaises(WikibaseEntitySchemaDownloadError):
-            es.download_schema()
+            es.__download_schema__()

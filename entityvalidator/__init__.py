@@ -47,9 +47,9 @@ class EntityValidator(BaseModel):
         # if not re.match(self.entity_id_regex, self.entity_id):
         #     raise QidError("QID has to be Q followed by only numbers like this: Q100")
 
-    def download_and_validate(self) -> None:
+    def __download_and_validate__(self) -> None:
         self.__check_inputs__()  # Check if inputs are valid
-        self.download_schema()
+        self.__download_schema__()
         if not self.entity_schema_data:
             raise NoEntitySchemaDataError("Got no entity schema data from Wikidata")
         with console.status("Downloading entity json"):
@@ -105,7 +105,7 @@ class EntityValidator(BaseModel):
                     f"Please check that the configuration is correct"
                 )
 
-    def download_schema(self) -> None:
+    def __download_schema__(self) -> None:
         """
         Downloads the schema from wikidata
         """

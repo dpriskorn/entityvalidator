@@ -2,7 +2,6 @@ import re
 from re import Pattern
 from typing import Any
 
-import requests
 from pydantic import BaseModel
 
 from entityvalidator.exceptions import EntityIdError
@@ -59,11 +58,12 @@ class Entity(BaseModel):
         self.__validate__()
         self.__parse_result__()
 
-    def __get_entity_data__(self):
-        """Only used for testing"""
-        url = f"{self.wikibase_url}/wiki/Special:EntityData/{self.entity_id}.json"
-        response = requests.get(url)
-        self.entity_data = response.json()
+    # def __get_entity_data__(self):
+    #     """Only used for testing"""
+    #     url = f"{self.wikibase_url}/wiki/Special:EntityData/{self.entity_id}.json"
+    #     headers = {"User-Agent": config.user_agent}
+    #     response = requests.get(url, headers=headers)
+    #     self.entity_data = response.json()
 
     def to_dict(self) -> dict[Any, Any]:
         json_ = self.result.to_dict()

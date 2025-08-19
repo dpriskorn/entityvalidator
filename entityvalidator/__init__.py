@@ -6,6 +6,7 @@ from typing import Any
 
 import aiohttp
 import requests
+from aiohttp import ClientSession
 from pydantic import BaseModel, Field
 from rich.console import Console
 
@@ -67,7 +68,6 @@ class EntityValidator(BaseModel):
         """Get all the JSON data we need asynchronously"""
         logger.debug("__download_json__: running")
         async with aiohttp.ClientSession() as session:
-            # TODO add user agent
             # Create tasks for downloading JSON data for each entity_id
             tasks = [
                 self._get_entity_json(entity_id, session)
@@ -80,14 +80,15 @@ class EntityValidator(BaseModel):
             # Handle results as needed
             # We don't handle the results for now.
 
-    async def _get_entity_json(self, entity_id: str, session) -> None:
+    async def _get_entity_json(self, entity_id: str, session: ClientSession) -> None:
         """
         Downloads the entity from Wikidata asynchronously
         """
         logger.debug("_get_entity_json: running")
         url = f"{self.wikibase_url}/wiki/Special:EntityData/{entity_id}.json"
+        headers = {"User-Agent": config.user_agent}
 
-        async with session.get(url) as response:
+        async with session.get(url, headers=headers) as response:
             if response.status == 200:
                 entity_data = await response.json()
                 self.entities.append(
@@ -109,8 +110,8 @@ class EntityValidator(BaseModel):
         Downloads the schema from wikidata
         """
         url: str = f"https://www.wikidata.org/wiki/EntitySchema:{self.eid}?action=raw"
-        # todo add user agent
-        response = requests.get(url)
+        headers = {"User-Agent": config.user_agent}
+        response = requests.get(url, headers=headers)
         if response.status_code == 404:
             raise WikibaseEntitySchemaDownloadError()
         self.entity_schema_data: dict = response.json()

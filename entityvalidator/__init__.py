@@ -2,7 +2,7 @@ import asyncio
 import logging
 import re
 from re import Pattern
-from typing import Any, List
+from typing import Any
 
 import aiohttp
 import requests
@@ -59,7 +59,8 @@ class EntityValidator(BaseModel):
         print(f"Downloaded {len(self.entities)} entities")
         if self.entities:
             with console.status("Validating entities"):
-                [entity.check_and_validate() for entity in self.entities]
+                for entity in self.entities:
+                    entity.check_and_validate()
             print("Validation finished")
         else:
             print("No entities to validate")
@@ -117,6 +118,6 @@ class EntityValidator(BaseModel):
         self.entity_schema_data: dict = response.json()
 
     @property
-    def get_results(self) -> List[dict[str, Any]]:
+    def get_results(self) -> list[dict[str, Any]]:
         self.__download_and_validate__()
         return [e.to_dict() for e in self.entities]

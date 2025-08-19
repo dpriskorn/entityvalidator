@@ -145,7 +145,7 @@ class Result(BaseModel):
     # def get_properties_as_a_string_with_labels_and_pid(
     #     self, wbi: WikibaseIntegrator, string_properties: Set[str]
     # ) -> str:
-    #     properties: List[ResultProperty] = []
+    #     properties: list[ResultProperty] = []
     #     for property_string in string_properties:
     #         wbi_property = wbi.property.get(property_string)
     #         property_object = ResultProperty(

@@ -48,6 +48,7 @@ repos:
     name: mypy
     # entry: python -c "import sys; print(sys.argv)"
     entry: mypy
+    args: ["--check-untyped-defs"]
     language: python
     language_version: python3.13
     require_serial: true

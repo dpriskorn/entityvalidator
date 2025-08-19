@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from fastapi import APIRouter, FastAPI, HTTPException, Query
 from starlette.responses import RedirectResponse
@@ -35,7 +36,7 @@ def validate_entities(
     entity_ids: str = Query(
         ..., description="Comma-separated list of entity IDs, e.g. Q42,Q43"
     ),
-):
+) -> dict[str, Any]:
     """
     Validate a list of entity IDs against a specific Wikibase entity schema.
 
